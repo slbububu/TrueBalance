@@ -1022,7 +1022,7 @@ function Sidebar({ view, setView, onLogout, user }: {
 
 // ─── Dashboard View ────────────────────────────────────────────────────────────
 
-function DashboardView({ expenses }: { expenses: Expense[] }) {
+function DashboardView({ expenses, setView }: { expenses: Expense[]; setView: (view: View) => void }) {
   const [period, setPeriod] = useState<"monthly" | "yearly">("monthly");
 
   const totalMonthly = expenses.reduce((s, e) => s + toMonthly(e.amount, e.frequency), 0);
@@ -1075,7 +1075,13 @@ function DashboardView({ expenses }: { expenses: Expense[] }) {
 
       {expenses.length === 0 ? (
         <div className="text-center py-20 text-gray-400 text-sm">
-          No expenses yet. Add your first one →
+          No expenses yet.{" "}
+            <button
+                onClick={() => setView("add")}
+                className="text-indigo-600 hover:text-indigo-700 font-medium transition-colors cursor-pointer"
+                >
+                Add your first one
+            </button>
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -1147,7 +1153,7 @@ function ExpensesView({ expenses, onDelete }: { expenses: Expense[]; onDelete: (
   }
 
   if (expenses.length === 0)
-    return <div className="text-center py-20 text-gray-400 text-sm">No expenses yet.</div>;
+    return <div className="text-center py-20 text-gray-400 text-sm">No expenses yet.<br></br>List of all your added expenses appears here.</div>;
 
   return (
     <div className="space-y-6">
@@ -1329,7 +1335,7 @@ export default function AppPage() {
     <div className="flex min-h-screen bg-gray-50">
       <Sidebar view={view} setView={setView} onLogout={handleLogout} user={DUMMY_USER} />
       <main className="flex-1 p-8 overflow-y-auto">
-        {view === "dashboard" && <DashboardView expenses={expenses} />}
+        {view === "dashboard" && <DashboardView expenses={expenses} setView={setView} />}
         {view === "expenses"  && <ExpensesView  expenses={expenses} onDelete={handleDeleteExpense} />}
         {view === "add"       && (
           <AddExpenseView

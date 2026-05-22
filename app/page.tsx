@@ -482,7 +482,6 @@ export default function HomePage() {
           </a>
         </div>
       </footer>
-
     </div>
   );
 }
