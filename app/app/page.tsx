@@ -1153,7 +1153,7 @@ function ExpensesView({ expenses, onDelete }: { expenses: Expense[]; onDelete: (
   }
 
   if (expenses.length === 0)
-    return <div className="text-center py-20 text-gray-400 text-sm">No expenses yet.<br></br>List of all your added expenses appears here.</div>;
+    return <div className="text-center py-20 text-gray-400 text-sm">No expenses yet.<br></br>List of all your expenses appears here.</div>;
 
   return (
     <div className="space-y-6">
@@ -1207,10 +1207,47 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-function AddExpenseView({ onAdd, customCategories, onAddCategory }: {
+function DeleteCategoryModal({ category, onConfirm, onCancel }: {
+  category: string;
+  onConfirm: () => void;
+  onCancel: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+      <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={onCancel} />
+      <div className="relative bg-white rounded-2xl shadow-xl border border-gray-100 p-6 w-full max-w-sm">
+        <div className="flex items-center justify-center w-11 h-11 rounded-full bg-red-50 mx-auto mb-4">
+          <Trash2 className="w-5 h-5 text-red-500" />
+        </div>
+        <h2 className="text-base font-bold text-gray-900 text-center mb-1">Delete category?</h2>
+        <p className="text-sm text-gray-500 text-center mb-6">
+          Deleting <span className="font-semibold text-gray-700">"{category}"</span> will also
+          permanently remove all expenses associated with it. This cannot be undone.
+        </p>
+        <div className="flex gap-3">
+          <button
+            onClick={onCancel}
+            className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            className="flex-1 px-4 py-2.5 rounded-xl bg-red-500 text-white text-sm font-semibold hover:bg-red-600 transition-colors"
+          >
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AddExpenseView({ onAdd, customCategories, onAddCategory, onDeleteCategory }: {
   onAdd: (e: Omit<Expense, "id" | "createdAt">) => Promise<void>;
   customCategories: string[];
   onAddCategory: (c: string) => void;
+  onDeleteCategory: (c: string) => void;
 }) {
   const allCats = [...PRESET_CATEGORIES, ...customCategories];
   const [name, setName]         = useState("");
@@ -1220,6 +1257,7 @@ function AddExpenseView({ onAdd, customCategories, onAddCategory }: {
   const [newCat, setNewCat]     = useState("");
   const [loading, setLoading]   = useState(false);
   const [success, setSuccess]   = useState(false);
+  const [pendingDelete, setPendingDelete] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1242,6 +1280,13 @@ function AddExpenseView({ onAdd, customCategories, onAddCategory }: {
 
   return (
     <div className="max-w-lg space-y-6">
+      {pendingDelete && (
+        <DeleteCategoryModal
+          category={pendingDelete}
+          onConfirm={() => { onDeleteCategory(pendingDelete); setPendingDelete(null); }}
+          onCancel={() => setPendingDelete(null)}
+        />
+      )}
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Add Expense</h1>
         <p className="text-sm text-gray-400 mt-0.5">Track a new recurring cost.</p>
@@ -1301,7 +1346,9 @@ function AddExpenseView({ onAdd, customCategories, onAddCategory }: {
         {customCategories.length > 0 && (
           <div className="flex flex-wrap gap-2 mt-3">
             {customCategories.map((c) => (
-              <span key={c} className="bg-indigo-50 text-indigo-600 text-xs font-medium px-2.5 py-1 rounded-full">{c}</span>
+              <span key={c} 
+              onClick={() => setPendingDelete(c)}
+              className="bg-indigo-50 text-indigo-600 text-xs font-medium px-2.5 py-1 rounded-full cursor-pointer transition-colors hover:bg-red-50 hover:text-red-500">{c}</span>
             ))}
           </div>
         )}
@@ -1324,6 +1371,11 @@ export default function AppPage() {
     setExpenses((prev) => [...prev, newExpense]);
   };
 
+  const handleDeleteCategory = (cat: string) => {
+    setCustomCategories((prev) => prev.filter((c) => c !== cat));
+    setExpenses((prev) => prev.filter((e) => e.category !== cat));
+  };
+
   // TODO: Replace with real Firestore deleteDoc once Firebase is configured
   const handleDeleteExpense = async (id: string) => {
     setExpenses((prev) => prev.filter((e) => e.id !== id));
@@ -1338,10 +1390,11 @@ export default function AppPage() {
         {view === "dashboard" && <DashboardView expenses={expenses} setView={setView} />}
         {view === "expenses"  && <ExpensesView  expenses={expenses} onDelete={handleDeleteExpense} />}
         {view === "add"       && (
-          <AddExpenseView
+          <AddExpenseView 
             onAdd={handleAddExpense}
             customCategories={customCategories}
-            onAddCategory={(c) => setCustomCategories((p) => [...p, c])}
+            onAddCategory={(c) => setCustomCategories((p) => [...p, c])} 
+            onDeleteCategory={handleDeleteCategory}
           />
         )}
       </main>

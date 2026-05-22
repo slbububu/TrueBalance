@@ -309,7 +309,7 @@ const features = [
 const steps = [
   { num: "01", title: "Create a free account", desc: "Sign up in seconds with your email or Google." },
   { num: "02", title: "Add your expenses", desc: "Enter what you pay, how often, and which category it belongs to." },
-  { num: "03", title: "See your TrueBalance", desc: "Instantly view your total monthly and yearly spending with visual breakdowns." },
+  { num: "03", title: "See your True Balance", desc: "Instantly view your total monthly and yearly spending with visual breakdowns." },
 ];
 
 export default function HomePage() {
