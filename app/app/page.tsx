@@ -915,7 +915,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   LayoutDashboard, List, PlusCircle, LogOut,
-  BarChart2, Trash2, Tag, ChevronDown,
+  BarChart2, Trash2, Tag, ChevronDown, X,
 } from "lucide-react";
 import {
   PieChart, Pie, Cell, Tooltip, ResponsiveContainer,
@@ -965,9 +965,11 @@ const fmtCurrency = (v: number) => `€${v.toFixed(2)}`;
 
 // ─── Sidebar ──────────────────────────────────────────────────────────────────
 
-function Sidebar({ view, setView, onLogout, user }: {
+function Sidebar({ view, setView, onLogout, user, mobileMenuOpen, setMobileMenuOpen }: {
   view: View; setView: (v: View) => void;
   onLogout: () => void; user: User;
+  mobileMenuOpen: boolean;
+  setMobileMenuOpen: (open: boolean) => void;
 }) {
   const items: { id: View; label: string; icon: React.ReactNode }[] = [
     { id: "dashboard", label: "Dashboard",   icon: <LayoutDashboard className="w-4 h-4" /> },
@@ -977,16 +979,28 @@ function Sidebar({ view, setView, onLogout, user }: {
 
   return (
     <aside className="w-60 min-h-screen bg-white border-r border-gray-100 flex flex-col py-6 px-4 shrink-0">
-      <div className="flex items-center gap-2 font-bold text-lg text-indigo-600 mb-8 px-2">
+      <div className="flex items-center gap-2 font-bold text-lg text-indigo-600 mb-6 px-2">
         <BarChart2 className="w-5 h-5" />
         TrueBalance
+        {/* Close button - only on mobile */}
+        <div className="md:hidden ml-auto">
+            <button
+            onClick={() => setMobileMenuOpen(false)}
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+            <X className="w-5 h-5 text-gray-600" />
+            </button>
+        </div>
       </div>
 
       <nav className="flex flex-col gap-1 flex-1">
         {items.map((item) => (
           <button
             key={item.id}
-            onClick={() => setView(item.id)}
+            onClick={() => {
+              setView(item.id);
+              setMobileMenuOpen(false);
+            }}
             className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors text-left
               ${view === item.id
                 ? "bg-indigo-50 text-indigo-600"
@@ -1037,11 +1051,6 @@ function DashboardView({ expenses, setView }: { expenses: Expense[]; setView: (v
   const pieData = Object.entries(categoryMap).map(([name, value]) => ({ name, value: +value.toFixed(2) }));
   const barData = [...pieData].sort((a, b) => b.value - a.value).slice(0, 6);
 
-  /*const tooltipFormatter = (value: number | string | Array<number | string> | undefined) => {
-    if (value === undefined) return "";
-    const num = typeof value === "number" ? value : parseFloat(String(value));
-    return isNaN(num) ? String(value) : fmtCurrency(num);
-  };*/
   const tooltipFormatter = (value: any) => {
   if (!value && value !== 0) return "";
   if (Array.isArray(value)) return value.map(v => fmtCurrency(Number(v))).join(", ");
@@ -1050,12 +1059,12 @@ function DashboardView({ expenses, setView }: { expenses: Expense[]; setView: (v
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex min-[400.01px]:items-center justify-between max-[400px]:flex-col max-[400px]:gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
           <p className="text-sm text-gray-400 mt-0.5">Your spending overview</p>
         </div>
-        <div className="flex items-center bg-gray-100 rounded-xl p-1 gap-1">
+        <div className="flex items-center bg-gray-100 rounded-xl p-1 gap-1 max-[400px]:self-start">
           {(["monthly", "yearly"] as const).map((p) => (
             <button key={p} onClick={() => setPeriod(p)}
               className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-colors capitalize
@@ -1080,12 +1089,11 @@ function DashboardView({ expenses, setView }: { expenses: Expense[]; setView: (v
                 onClick={() => setView("add")}
                 className="text-indigo-600 hover:text-indigo-700 font-medium transition-colors cursor-pointer"
                 >
-                Add your first one
+                Add your first expense
             </button>
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Pie chart */}
           <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
             <h2 className="text-sm font-semibold text-gray-700 mb-4">Spending by Category</h2>
             <ResponsiveContainer width="100%" height={240}>
@@ -1110,7 +1118,6 @@ function DashboardView({ expenses, setView }: { expenses: Expense[]; setView: (v
             </div>
           </div>
 
-          {/* Bar chart */}
           <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
             <h2 className="text-sm font-semibold text-gray-700 mb-4">Top Categories</h2>
             <ResponsiveContainer width="100%" height={240}>
@@ -1219,7 +1226,7 @@ function DeleteCategoryModal({ category, onConfirm, onCancel }: {
         <div className="flex items-center justify-center w-11 h-11 rounded-full bg-red-50 mx-auto mb-4">
           <Trash2 className="w-5 h-5 text-red-500" />
         </div>
-        <h2 className="text-base font-bold text-gray-900 text-center mb-1">Delete category?</h2>
+        <h2 className="text-base font-bold text-gray-900 text-center mb-2">Delete category?</h2>
         <p className="text-sm text-gray-500 text-center mb-6">
           Deleting <span className="font-semibold text-gray-700">"{category}"</span> will also
           permanently remove all expenses associated with it. This cannot be undone.
@@ -1301,7 +1308,7 @@ function AddExpenseView({ onAdd, customCategories, onAddCategory, onDeleteCatego
 
           <div className="grid grid-cols-2 gap-4">
             <Field label="Amount (€)">
-              <input type="number" min="0" step="0.01" value={amount}
+              <input type="number" min="0" step="1" value={amount}
                 onChange={(e) => setAmount(e.target.value)} required
                 placeholder="0.00" className={inputCls} />
             </Field>
@@ -1348,7 +1355,7 @@ function AddExpenseView({ onAdd, customCategories, onAddCategory, onDeleteCatego
             {customCategories.map((c) => (
               <span key={c} 
               onClick={() => setPendingDelete(c)}
-              className="bg-indigo-50 text-indigo-600 text-xs font-medium px-2.5 py-1 rounded-full cursor-pointer transition-colors hover:bg-red-50 hover:text-red-500">{c}</span>
+              className="bg-indigo-50 text-indigo-600 text-xs font-medium px-2.5 py-1 rounded-full cursor-pointer hover:bg-red-50 hover:text-red-500">{c}</span>
             ))}
           </div>
         )}
@@ -1364,6 +1371,7 @@ export default function AppPage() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [customCategories, setCustomCategories] = useState<string[]>([]);
   const [view, setView] = useState<View>("dashboard");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // TODO: Replace with real Firestore addDoc once Firebase is configured
   const handleAddExpense = async (e: Omit<Expense, "id" | "createdAt">) => {
@@ -1383,7 +1391,7 @@ export default function AppPage() {
 
   const handleLogout = () => router.push("/");
 
-  return (
+  /*return (
     <div className="flex min-h-screen bg-gray-50">
       <Sidebar view={view} setView={setView} onLogout={handleLogout} user={DUMMY_USER} />
       <main className="flex-1 p-8 overflow-y-auto">
@@ -1399,5 +1407,61 @@ export default function AppPage() {
         )}
       </main>
     </div>
-  );
+  );*/
+
+  return (
+  <div className="flex min-h-screen bg-gray-50">
+    {/* Sidebar - hidden on mobile, visible on md+ */}
+    <div className={`fixed md:static inset-0 z-40 md:z-auto ${mobileMenuOpen ? 'block' : 'hidden'} md:block`}>
+      <Sidebar 
+        view={view} 
+        setView={setView} 
+        onLogout={handleLogout} 
+        user={DUMMY_USER}
+        mobileMenuOpen={mobileMenuOpen}
+        setMobileMenuOpen={setMobileMenuOpen}
+      />
+    </div>
+
+    {/* Mobile menu backdrop */}
+    {mobileMenuOpen && (
+      <div 
+        className="fixed inset-0 bg-black/50 md:hidden z-30"
+        onClick={() => setMobileMenuOpen(false)}
+      />
+    )}
+
+    {/* Main content */}
+    <main className="flex-1 flex flex-col overflow-hidden">
+      {/* Mobile header with hamburger */}
+      <div className="md:hidden flex items-center gap-4 px-4 py-4 bg-white border-b border-gray-100">
+        <button
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          className="p-2 hover:bg-gray-100 rounded-lg"
+        >
+          <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+        <div className="flex items-center gap-2 font-bold text-lg text-indigo-600">
+            <BarChart2 className="w-5 h-5" />
+            <span className="font-bold text-indigo-600">TrueBalance</span>
+        </div>
+      </div>
+
+      <div className="flex-1 p-8 overflow-y-auto">
+        {view === "dashboard" && <DashboardView expenses={expenses} setView={setView} />}
+        {view === "expenses"  && <ExpensesView  expenses={expenses} onDelete={handleDeleteExpense} />}
+        {view === "add"       && (
+          <AddExpenseView 
+            onAdd={handleAddExpense}
+            customCategories={customCategories}
+            onAddCategory={(c) => setCustomCategories((p) => [...p, c])} 
+            onDeleteCategory={handleDeleteCategory}
+          />
+        )}
+      </div>
+    </main>
+  </div>
+);
 }
