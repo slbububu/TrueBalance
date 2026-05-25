@@ -1,0 +1,12 @@
+# Složky, které se nemají kopírovat do kontejneru
+node_modules
+.next
+out
+build
+.git
+.env*.local
+.vscode
+.idea
+npm-debug.log
+yarn-debug.log
+yarn-error.log
