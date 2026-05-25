@@ -1,19 +1,30 @@
-# Použijeme oficiální Node.js image
-FROM node:20-slim
+# 1. Fáze: Instalace závislostí a sestavení (build)
+FROM node:20-slim AS builder
+WORKDIR /app
 
-# Vytvoříme pracovní adresář
-WORKDIR /usr/src/app
-
-# Zkopírujeme package.json a nainstalujeme závislosti
+# Nejdříve zkopírujeme package soubory, aby se využilo cacheování vrstev
 COPY package*.json ./
-RUN npm install --production
+RUN npm install
 
-# Zkopírujeme zbytek kódu
+# Zkopírujeme zbytek kódu a zkompilujeme aplikaci
 COPY . .
+RUN npm run build
 
-# Port, na kterém aplikace běží (standardně 8080 pro Cloud Run)
-ENV PORT 8080
-EXPOSE 8080
+# 2. Fáze: Produkční prostředí (spuštění)
+FROM node:20-slim AS runner
+WORKDIR /app
+
+# Nastavení na produkci
+ENV NODE_ENV production
+
+# Zkopírujeme pouze to, co je nezbytné pro běh
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package.json ./package.json
+
+# Exponujeme port 3000, na kterém Next.js běží
+EXPOSE 3000
 
 # Příkaz pro spuštění
-CMD [ "npm", "start" ]
+CMD ["npm", "start"]
