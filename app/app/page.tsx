@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import {onAuthStateChanged, signOut, User } from "firebase/auth";
+import { auth } from "@/lib/firebase";
 import {
   LayoutDashboard, List, PlusCircle, LogOut,
   BarChart2, Trash2, Tag, ChevronDown, X,
@@ -27,10 +29,6 @@ interface Expense {
 type View = "dashboard" | "expenses" | "add";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
-
-// TODO: Replace with real Firebase Auth + Firestore once configured
-type User = { displayName: string; email: string };
-const DUMMY_USER: User = { displayName: "Demo User", email: "demo@truebalance.app" };
 
 const PRESET_CATEGORIES = [
   "Subscriptions", "Housing", "Food & Groceries", "Transport",
@@ -150,8 +148,8 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
   return (
     <div className="bg-white border border-gray-200 rounded-xl shadow-md px-3 py-2">
-      <p className="text-xs font-semibold text-gray-500 mb-1">{label}</p>
-      <p className="text-sm font-bold text-gray-700">{fmtCurrency(payload[0].value)}</p>
+      <p className="text-xs font-semibold text-gray-800 mb-1">{label}</p>
+      <p className="text-sm font-bold text-gray-500">{fmtCurrency(payload[0].value)}</p>
     </div>
   );
 };
@@ -177,8 +175,8 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <StatCard label={`Total ${period === "monthly" ? "Monthly" : "Yearly"}`} value={fmtCurrency(total)} accent />
-        <StatCard label="Total Monthly" value={fmtCurrency(totalMonthly)} />
-        <StatCard label="Total Yearly"  value={fmtCurrency(totalYearly)} />
+        <StatCard label={`Total ${period === "monthly" ? "Yearly" : "Monthly"}`} value={fmtCurrency(period === "monthly" ? totalYearly : totalMonthly)} />
+        <StatCard label="Total Daily" value={fmtCurrency(totalMonthly / 30)} />
       </div>
 
       {expenses.length === 0 ? (
@@ -252,60 +250,6 @@ function StatCard({ label, value, accent }: { label: string; value: string; acce
 
 // ─── Expense List View ─────────────────────────────────────────────────────────
 
-/*function ExpensesView({ expenses, onDelete, onDeleteCategory }: { expenses: Expense[]; onDelete: (id: string) => void; onDeleteCategory: (cat: string) => void }) {
-  const grouped: Record<string, Expense[]> = {};
-  for (const e of expenses) {
-    (grouped[e.category] ??= []).push(e);
-  }
-
-  if (expenses.length === 0)
-    return <div className="text-center py-20 text-gray-400 text-sm">No expenses yet.<br></br>List of all your expenses appears here.</div>;
-
-  return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900">My Expenses</h1>
-      {Object.entries(grouped).map(([cat, items]) => (
-        <div key={cat} className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
-          <div className="flex items-center gap-2 px-5 py-3 border-b border-gray-50 bg-gray-50/60">
-            <Tag className="w-3.5 h-3.5 text-indigo-400" />
-            <span className="text-sm font-semibold text-gray-700">{cat}</span>
-            <button
-                onClick={() => onDeleteCategory(cat)}
-                className="ml-auto opacity-0 cursor-pointer hover:opacity-100 text-gray-300 hover:text-red-400 transition-all"
-              >
-              <Trash2 className="w-4 h-4" />
-            </button>
-            <span className="text-xs text-gray-400">{items.length} item{items.length !== 1 ? "s" : ""}</span>
-          </div>
-          {items.map((e) => (
-            <div key={e.id}
-              className="flex items-center px-5 py-3.5 border-b border-gray-50 last:border-0 hover:bg-gray-50 transition-colors group">
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900">{e.name}</p>
-                <p className="text-xs text-gray-400 capitalize">{e.frequency}</p>
-              </div>
-              <div className="text-right mr-4">
-                <p className="text-sm font-semibold text-gray-900">{fmtCurrency(e.amount)}</p>
-                <p className="text-xs text-gray-400">
-                  {e.frequency === "monthly"
-                    ? `${fmtCurrency(e.amount * 12)}/yr`
-                    : `${fmtCurrency(e.amount / 12)}/mo`}
-                </p>
-              </div>
-              <button
-                onClick={() => onDelete(e.id)}
-                className="opacity-0 cursor-pointer group-hover:opacity-100 text-gray-300 hover:text-red-400 transition-all"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
-            </div>
-          ))}
-        </div>
-      ))}
-    </div>
-  );
-}*/
-
 function ExpensesView({
   expenses,
   onDelete,
@@ -321,6 +265,7 @@ function ExpensesView({
   for (const e of expenses) {
     (grouped[e.category] ??= []).push(e);
   }
+  const categories = Object.keys(grouped);
 
   if (expenses.length === 0)
     return (
@@ -342,13 +287,13 @@ function ExpensesView({
         />
       )}
       <h1 className="text-2xl font-bold text-gray-900">My Expenses</h1>
-      {Object.entries(grouped).map(([cat, items]) => (
+      {Object.entries(grouped).map(([cat, items], i) => (
         <div
           key={cat}
           className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden"
         >
           <div className="flex items-center gap-2 px-5 py-3 border-b border-gray-50 bg-gray-50/60">
-            <Tag className="w-3.5 h-3.5 text-indigo-400" />
+            <Tag className="w-3.5 h-3.5" style={{ color: COLORS[i % COLORS.length] }} /> {/* text-indigo-400*/}
             <span className="text-sm font-semibold text-gray-700">{cat}</span>
             <button
               onClick={() => setPendingDelete(cat)}
@@ -564,6 +509,25 @@ export default function AppPage() {
   const [customCategories, setCustomCategories] = useState<string[]>([]);
   const [view, setView] = useState<View>("dashboard");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
+
+  // Auth guard
+useEffect(() => {
+  const unsub = onAuthStateChanged(auth, (u) => {
+    if (!u) router.replace("/login");
+    else setUser(u);
+    setAuthLoading(false);
+  });
+  return unsub;
+}, [router]);
+
+  if (authLoading) return (
+    <div className="min-h-screen flex items-center justify-center text-gray-400 text-sm">
+      Loading…
+    </div>
+  );
+  if (!user) return null;
 
   // TODO: Replace with real Firestore addDoc once Firebase is configured
   const handleAddExpense = async (e: Omit<Expense, "id" | "createdAt">) => {
@@ -581,7 +545,26 @@ export default function AppPage() {
     setExpenses((prev) => prev.filter((e) => e.id !== id));
   };
 
-  const handleLogout = () => router.push("/");
+  const handleLogout = async () => {
+    await signOut(auth);
+    router.push("/");
+  };
+
+  //const handleLogout = () => router.push("/");
+
+  /*const handleAddExpense = async (e: Omit<Expense, "id" | "createdAt">) => {
+  if (!user) return;
+  await addDoc(collection(db, "expenses"), { ...e, uid: user.uid, createdAt: serverTimestamp() });
+};
+
+const handleDeleteExpense = async (id: string) => {
+  await deleteDoc(doc(db, "expenses", id));
+};
+
+const handleDeleteCategory = (cat: string) => {
+  setCustomCategories((prev) => prev.filter((c) => c !== cat));
+  setExpenses((prev) => prev.filter((e) => e.category !== cat));
+};*/
 
   return (
   <div className="md:ml-60 flex min-h-screen bg-gray-50">
@@ -591,7 +574,7 @@ export default function AppPage() {
         view={view} 
         setView={setView} 
         onLogout={handleLogout} 
-        user={DUMMY_USER}
+        user={user}
         mobileMenuOpen={mobileMenuOpen}
         setMobileMenuOpen={setMobileMenuOpen}
       />
@@ -639,20 +622,3 @@ export default function AppPage() {
   </div>
 );
 }
-
-          /*<div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
-            <h2 className="text-sm font-semibold text-gray-700 mb-4">Top Categories</h2>
-            <ResponsiveContainer width="100%" height={240}>
-              <BarChart data={barData} margin={{ top: 0, right: 0, left: -10, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#a1a1a1" />
-                <XAxis dataKey="name" tick={{ fontSize: 10 }} />
-                <YAxis tick={{ fontSize: 10 }} />
-                <Tooltip formatter={tooltipFormatter} />
-                <Bar dataKey="value" radius={[6, 6, 0, 0]}>
-                  {barData.map((_, i) => (
-                    <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>*/

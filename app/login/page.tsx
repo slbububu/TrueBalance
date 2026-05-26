@@ -4,6 +4,8 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { BarChart2 } from "lucide-react";
+import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
+import { auth } from "@/lib/firebase";
 
 // TODO: Replace with real Firebase Auth once configured
 const DUMMY_USER = { email: "demo@truebalance.app", password: "demo123" };
@@ -15,7 +17,18 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleEmailLogin = async (e: React.FormEvent) => {
+  function friendlyError(code: string): string {
+  switch (code) {
+    case "auth/user-not-found":     return "No account found with this email.";
+    case "auth/wrong-password":     return "Incorrect password. Please try again.";
+    case "auth/invalid-email":      return "Please enter a valid email address.";
+    case "auth/too-many-requests":  return "Too many attempts. Please try again later.";
+    case "auth/popup-closed-by-user": return "Google sign-in was cancelled.";
+    default:                        return "Something went wrong. Please try again.";
+  }
+}
+
+  /*const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setLoading(true);
@@ -26,15 +39,40 @@ export default function LoginPage() {
       setError("Invalid email or password. Try demo@truebalance.app / demo123");
     }
     setLoading(false);
-  };
+  };*/
 
-  const handleGoogleLogin = async () => {
+  const handleEmailLogin = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setLoading(true);
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
+    router.push("/app");
+  } catch (err: any) {
+    setError(friendlyError(err.code));
+  } finally {
+    setLoading(false);
+  }
+};
+
+  /*const handleGoogleLogin = async () => {
     setError("");
     setLoading(true);
     await new Promise((r) => setTimeout(r, 600));
     router.push("/app");
     setLoading(false);
-  };
+  };*/
+
+  const handleGoogleLogin = async () => {
+  setLoading(true);
+  try {
+    await signInWithPopup(auth, new GoogleAuthProvider());
+    router.push("/app");
+  } catch (err: any) {
+    setError(friendlyError(err.code));
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4">

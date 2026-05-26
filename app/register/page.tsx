@@ -4,8 +4,9 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { BarChart2 } from "lucide-react";
-
-// TODO: Replace with real Firebase Auth once configured
+//import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
+import { createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, updateProfile } from "firebase/auth";
+import { auth } from "@/lib/firebase";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -15,7 +16,18 @@ export default function RegisterPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleRegister = async (e: React.FormEvent) => {
+  function friendlyError(code: string): string {
+  switch (code) {
+    case "auth/user-not-found":     return "No account found with this email.";
+    case "auth/wrong-password":     return "Incorrect password. Please try again.";
+    case "auth/invalid-email":      return "Please enter a valid email address.";
+    case "auth/too-many-requests":  return "Too many attempts. Please try again later.";
+    case "auth/popup-closed-by-user": return "Google sign-in was cancelled.";
+    default:                        return "Something went wrong. Please try again.";
+  }
+}
+
+  /*const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     if (password.length < 6) {
@@ -26,15 +38,60 @@ export default function RegisterPage() {
     await new Promise((r) => setTimeout(r, 600));
     router.push("/app");
     setLoading(false);
-  };
+  };*/
 
-  const handleGoogleRegister = async () => {
+  /*const handleEmailLogin = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setLoading(true);
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
+    router.push("/app");
+  } catch (err: any) {
+    setError(friendlyError(err.code));
+  } finally {
+    setLoading(false);
+  }
+};*/
+
+
+const handleEmailRegister = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setError("");
+  if (password.length < 8) {
+    setError("Password must be at least 8 characters.");
+    return;
+  }
+  setLoading(true);
+  try {
+    const cred = await createUserWithEmailAndPassword(auth, email, password);
+    await updateProfile(cred.user, { displayName: name });
+    router.push("/app");
+  } catch (err: any) {
+    setError(friendlyError(err.code));
+  } finally {
+    setLoading(false);
+  }
+};
+
+  /*const handleGoogleRegister = async () => {
     setError("");
     setLoading(true);
     await new Promise((r) => setTimeout(r, 600));
     router.push("/app");
     setLoading(false);
-  };
+  };*/
+
+  const handleGoogleLogin = async () => {
+  setLoading(true);
+  try {
+    await signInWithPopup(auth, new GoogleAuthProvider());
+    router.push("/app");
+  } catch (err: any) {
+    setError(friendlyError(err.code));
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4">
@@ -49,7 +106,7 @@ export default function RegisterPage() {
         <p className="text-sm text-gray-500 mb-6">Free forever. No credit card needed.</p>
 
         <button
-          onClick={handleGoogleRegister}
+          onClick={handleGoogleLogin}
           disabled={loading}
           className="w-full flex items-center justify-center gap-3 border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer mb-4 disabled:opacity-50"
         >
@@ -63,7 +120,7 @@ export default function RegisterPage() {
           <div className="flex-1 h-px bg-gray-100" />
         </div>
 
-        <form onSubmit={handleRegister} className="space-y-4">
+        <form onSubmit={handleEmailRegister} className="space-y-4">
           <div>
             <label className="block text-xs font-medium text-gray-700 mb-1">Full Name</label>
             <input
@@ -87,13 +144,13 @@ export default function RegisterPage() {
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">Password</label>
+            <label className="block text-xs font-medium text-gray-700 mb-1">Password (lowercase, uppercase letters and numbers)</label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              placeholder="Min. 6 characters"
+              placeholder="Min. 8 characters"
               className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
             />
           </div>
@@ -117,7 +174,7 @@ export default function RegisterPage() {
         </p>
       </div>
 
-      <p className="text-xs text-gray-400 mt-6">TrueBalance is free &amp; open source.</p>
+      <p className="text-xs text-gray-400 mt-6">We don't track you or sell your data.</p>
     </div>
   );
 }

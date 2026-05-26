@@ -93,7 +93,7 @@ export default function HomePage() {
 
       {/* Hero Section */}
       <section className="max-w-6xl mx-auto px-6 min-[400.01px]:pt-24 max-[400px]:pt-10 pb-20 text-center">
-        <span className="inline-block bg-indigo-50 text-indigo-600 text-xs font-semibold px-3 py-1 rounded-full mb-6 tracking-wide uppercase">
+        <span className="inline-block text-indigo-900 italic text-lg underline decoration-indigo-400 font-semibold px-3 py-1 mb-6 tracking-wide uppercase">
           Free &amp; Open Source Expense tracking App
         </span>
         <h1 className="text-5xl md:text-6xl font-extrabold text-gray-900 leading-tight mb-6">
