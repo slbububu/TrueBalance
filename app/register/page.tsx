@@ -4,7 +4,6 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { BarChart2 } from "lucide-react";
-//import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import { createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, updateProfile } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 
@@ -23,35 +22,9 @@ export default function RegisterPage() {
     case "auth/invalid-email":      return "Please enter a valid email address.";
     case "auth/too-many-requests":  return "Too many attempts. Please try again later.";
     case "auth/popup-closed-by-user": return "Google sign-in was cancelled.";
-    default:                        return "Something went wrong. Please try again.";
+    default:                        return "Something went wrong. Ensure you meet the password requirements and try again.";
   }
 }
-
-  /*const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters.");
-      return;
-    }
-    setLoading(true);
-    await new Promise((r) => setTimeout(r, 600));
-    router.push("/app");
-    setLoading(false);
-  };*/
-
-  /*const handleEmailLogin = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setLoading(true);
-  try {
-    await signInWithEmailAndPassword(auth, email, password);
-    router.push("/app");
-  } catch (err: any) {
-    setError(friendlyError(err.code));
-  } finally {
-    setLoading(false);
-  }
-};*/
 
 
 const handleEmailRegister = async (e: React.FormEvent) => {
@@ -72,14 +45,6 @@ const handleEmailRegister = async (e: React.FormEvent) => {
     setLoading(false);
   }
 };
-
-  /*const handleGoogleRegister = async () => {
-    setError("");
-    setLoading(true);
-    await new Promise((r) => setTimeout(r, 600));
-    router.push("/app");
-    setLoading(false);
-  };*/
 
   const handleGoogleLogin = async () => {
   setLoading(true);
@@ -103,7 +68,7 @@ const handleEmailRegister = async (e: React.FormEvent) => {
 
       <div className="w-full max-w-sm bg-white border border-gray-200 rounded-2xl shadow-sm p-8">
         <h1 className="text-2xl font-bold text-gray-900 mb-1">Create your account</h1>
-        <p className="text-sm text-gray-500 mb-6">Free forever. No credit card needed.</p>
+        <p className="text-sm text-gray-500 mb-6">Completely free. No credit card needed.</p>
 
         <button
           onClick={handleGoogleLogin}

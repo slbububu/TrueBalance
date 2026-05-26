@@ -445,7 +445,7 @@ function AddExpenseView({ onAdd, customCategories, onAddCategory, onDeleteCatego
 
           <div className="grid grid-cols-2 gap-4">
             <Field label="Amount (€)">
-              <input type="number" min="0" step="1" value={amount}
+              <input type="number" min="0" step="0.01" value={amount}
                 onChange={(e) => setAmount(e.target.value)} required
                 placeholder="0.00" className={inputCls} />
             </Field>

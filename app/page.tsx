@@ -131,7 +131,7 @@ export default function HomePage() {
               <Image
                 src="/app-preview.png"
                 alt="TrueBalance app preview"
-                width={1917}
+                width={1919}
                 height={1079}
                 className="w-full h-full object-cover object-top"
                 priority
@@ -156,7 +156,7 @@ export default function HomePage() {
               <Image
                 src="/app-preview.png"
                 alt="TrueBalance app preview fullscreen"
-                width={1917}
+                width={1919}
                 height={1079}
                 className="w-full h-auto"
                 priority
