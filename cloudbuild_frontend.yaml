@@ -1,5 +1,4 @@
 steps:
-  # 1. Krok: Nastavení .env pro Next.js
   - name: 'gcr.io/cloud-builders/gcloud'
     id: 'set .env file'
     entrypoint: bash
@@ -7,37 +6,31 @@ steps:
       - -c
       - |
         touch ./frontend/.env
-        # Změněno z VITE_ na NEXT_PUBLIC_, aby to Next.js viděl v prohlížeči
-        echo "NEXT_PUBLIC_PROJECT_NUMBER=${PROJECT_NUMBER}" > ./frontend/.env
-
-  # 2. Krok: Build Dockeru s opravenou cestou k Dockerfile
-  - name: 'gcr.io/cloud-builders/docker'
+        echo "VITE_PROJECT_NUMBER=${PROJECT_NUMBER}" > ./frontend/.env
+        - name: 'gcr.io/cloud-builders/docker'
     id: 'build docker package'
     args: [
         'build',
-        '-t', '${_ARTIFACT_REGISTRY_URL}/frontend:${COMMIT_SHA}',
-        '-f', './frontend/Dockerfile', # <-- TENTO ŘÁDEK BYLO NUTNÉ PŘIDAT
-        './frontend'
+        '-t',
+        '${_ARTIFACT_REGISTRY_URL}/frontend:${COMMIT_SHA}',
+                './frontend'
       ]
-
-  # 3. Krok: Push do Artifact Registry (Zůstává stejný)
-  - name: 'gcr.io/cloud-builders/docker'
+        - name: 'gcr.io/cloud-builders/docker'
     id: 'docker push'
     args: ['push', '-a', '${_ARTIFACT_REGISTRY_URL}/frontend']
-
-  # 4. Krok: Nasazení na Cloud Run (Zůstává stejný)
-  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+      - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     id: 'deploy to cloud run'
     entrypoint: gcloud
-    args:
-      [
         'run',
         'deploy',
         'frontend',
-        '--image', '${_ARTIFACT_REGISTRY_URL}/frontend:${COMMIT_SHA}',
-        '--region', 'europe-west3',
-        '--platform', 'managed',
-        '--allow-unauthenticated'
+        '--image',
+        '${_ARTIFACT_REGISTRY_URL}/frontend:${COMMIT_SHA}',
+        '--region',
+        'europe-west3',
+        '--platform',
+        'managed',
+                '--allow-unauthenticated'
       ]
 
 images:
