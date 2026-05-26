@@ -505,12 +505,29 @@ function AddExpenseView({ onAdd, customCategories, onAddCategory, onDeleteCatego
 
 export default function AppPage() {
   const router = useRouter();
-  const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [customCategories, setCustomCategories] = useState<string[]>([]);
+  //const [customCategories, setCustomCategories] = useState<string[]>([]);
   const [view, setView] = useState<View>("dashboard");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const [expenses, setExpenses] = useState<Expense[]>(() => {
+  if (typeof window === "undefined") return [];
+  try {
+    const stored = localStorage.getItem("truebalance_expenses");
+    return stored ? JSON.parse(stored) : [];
+  } catch {
+    return [];
+  }
+});
+  const [customCategories, setCustomCategories] = useState<string[]>(() => {
+  if (typeof window === "undefined") return [];
+  try {
+    const stored = localStorage.getItem("truebalance_categories");
+    return stored ? JSON.parse(stored) : [];
+  } catch {
+    return [];
+  }
+});
 
   // Auth guard
 useEffect(() => {
@@ -521,6 +538,16 @@ useEffect(() => {
   });
   return unsub;
 }, [router]);
+
+  //Save expenses to localStorage()
+  useEffect(() => {
+    localStorage.setItem("truebalance_expenses", JSON.stringify(expenses));
+}, [expenses]);
+
+  //Save custom categories to localStorage()
+  useEffect(() => {
+    localStorage.setItem("truebalance_categories", JSON.stringify(customCategories));
+}, [customCategories]);
 
   if (authLoading) return (
     <div className="min-h-screen flex items-center justify-center text-gray-400 text-sm">
@@ -540,7 +567,6 @@ useEffect(() => {
     setExpenses((prev) => prev.filter((e) => e.category !== cat));
   };
 
-  // TODO: Replace with real Firestore deleteDoc once Firebase is configured
   const handleDeleteExpense = async (id: string) => {
     setExpenses((prev) => prev.filter((e) => e.id !== id));
   };
@@ -549,22 +575,6 @@ useEffect(() => {
     await signOut(auth);
     router.push("/");
   };
-
-  //const handleLogout = () => router.push("/");
-
-  /*const handleAddExpense = async (e: Omit<Expense, "id" | "createdAt">) => {
-  if (!user) return;
-  await addDoc(collection(db, "expenses"), { ...e, uid: user.uid, createdAt: serverTimestamp() });
-};
-
-const handleDeleteExpense = async (id: string) => {
-  await deleteDoc(doc(db, "expenses", id));
-};
-
-const handleDeleteCategory = (cat: string) => {
-  setCustomCategories((prev) => prev.filter((c) => c !== cat));
-  setExpenses((prev) => prev.filter((e) => e.category !== cat));
-};*/
 
   return (
   <div className="md:ml-60 flex min-h-screen bg-gray-50">
