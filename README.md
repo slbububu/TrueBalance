@@ -1,128 +1,79 @@
-# TrueBalance
+# StudentProject
+This is a simple template project for GCP, which:
+  - Has an API and Frontend hosted separately in **Docker** containers in **Cloud Run**
+  - Automatically sends information about new commits to **Cloud Build**, which deploys the code
 
-TrueBalance is a free, open-source personal finance tracking web app that helps you understand exactly where your money goes. Track all your recurring expenses — subscriptions, rent, utilities, and more — and instantly see your true monthly and yearly spending broken down by category.
+## Fork
+To recreate this project, you can create a **fork** of this repository in your Github account and follow the steps outlined for GCP below.
 
----
+## Initial GCP setup
+After creating a new GCP project and creating a fork of this repository, there is a few steps we need to do in GCP:
+  - [Create a new Artifact Repository](#creating-an-artifact-repository)
+  - [Create connection to Github in Cloud Build](#connecting-to-github)
+  - [Create Cloud Build triggers for the frontend and api](#creating-a-cloud-build-trigger)
+  - [Create a dummy table in BigQuery matching the one in the project's API](#creating-a-bigquery-table)
 
-## Features
+When creating the GCP resources, it is possible you will need to 'activate' some of them first!
 
-- 📊 **Dashboard** — visual overview of your spending with a donut chart and bar chart broken down by category
-- 💸 **Expense tracking** — add recurring expenses with a name, amount, frequency (monthly or yearly), and category
-- 🗂️ **Categories** — organize expenses with built-in presets or create your own custom categories
-- 🔄 **Monthly / Yearly toggle** — switch between monthly and yearly totals at any time
-- 🗑️ **Delete expenses and categories** — remove individual expenses or entire categories with all their associated expenses when you don't need them
-- 🔐 **Authentication** — sign in with Email/Password or your Google account via Firebase Auth
-- 📱 **Responsive design** — fully usable on mobile with a collapsible sidebar and a sticky top navbar
+### Creating an Artifact Repository
+This is where the compiled frontend and api artifacts will go, and is necessary for their deployment. 
+1. Search for 'Artifact Registry'
+2. Click on 'Create Repository'
+3. Put 'build' as the name
+4. Set region to 'europe-west3 (Frankfurt)'
+5. Keep all other settings and click 'Create'
+6. Make sure to click 'Copy path' once it's created and save the value in notepad for later
 
----
+### Connecting to Github
+This is necessary for automatic triggering of builds upon commit detection:
+1. Make sure you are logged into Github in the browser
+2. Go to 'Cloud Build -> Repositories -> 1st gen'
+3. Click on 'Connect Repository' (You may have to scroll down a bit to see the button)
+4. Select 'GitHub (Cloud Build GitHub App)' and click 'Continue'
+5. Authenticate Cloud Build to access your Github account
+6. Select the Github Repository with the project and click 'Connect'
 
-## Tech Stack
+### Creating a Cloud Build Trigger
+We will be creating two triggers, called 'deploy-api' and 'deploy-frontend'
+1. Go to 'Cloud Build -> Triggers -> Create Trigger'
+2. Set the name
+3. Configure the repository and branch regex (make sure Repository generation is 1st gen)
+4. Set cloudbuild configuration file location to match the cloudbuild files in this repository
+5. Make sure to add variable `_ARTIFACT_REGISTRY_URL` and as value set the value we copied in the Artifact Registry earlier
+6. Make sure to enable 'Require approval before build executes'
+7. Optionally check 'Send build logs to Github'
+8. Click 'Save'
 
-- **Framework** — [Next.js](https://nextjs.org/) (App Router)
-- **Language** — TypeScript
-- **Styling** — [Tailwind CSS](https://tailwindcss.com/)
-- **User Authentication** — [Firebase](https://firebase.google.com/)
-- **Charts** — [Recharts](https://recharts.org/)
-- **Icons** — [Lucide React](https://lucide.dev/)
+### Creating a BigQuery table
+1. Go to BigQuery
+2. Click on 'Create new -> Table'
+3. Click 'Dataset - Create new Dataset'
+4. Set the name 'my_test_dataset' and click 'Create dataset'
+5. Select the newly created dataset as the dataset for this table
+6. Set the table name as 'my_test_table'
+7. Set the table fields under 'Schema' as follows:
 
----
+| Field Name | Type    | Mode     |
+|-----------|---------|----------|
+| ID        | STRING  | NULLABLE |
+| Name      | STRING  | NULLABLE |
+| BirthDate | DATETIME| NULLABLE |
+| Country   | STRING  | NULLABLE |
 
-## Getting Started
-
-### Prerequisites
-
-- Node.js 18+
-- A [Firebase](https://console.firebase.google.com/) project with:
-  - **Authentication** enabled (Email/Password + Google)
-
-### Installation
-
-1. **Clone the repository**
-
-```bash
-git clone https://github.com/JetLanzo/truebalance.git
-cd truebalance
+8. Click on 'Create table'
+9. Run the following SQL (Click on the + in the control panel and paste the query there):
+```
+INSERT INTO `my_test_dataset.my_test_table` (ID, Name, BirthDate, Country)
+VALUES
+  ('a05dbe3b-5d51-42bb-bfec-900e2d6d8e25', 'Ramon Ortega',   DATETIME '1987-02-11 00:00:00', 'Mexico'),
+  ('eeffc695-e5f0-4171-ac5e-c58f71bc666e', 'Jan Moldavsek', DATETIME '1974-05-13 00:00:00', 'Czechia'),
+  ('9961ec13-867b-4c2b-8911-0ab519f77c71', 'John Casidy',   DATETIME '2000-01-07 00:00:00', 'USA'),
+  ('3a8d6254-7e8c-47bf-8692-eb47e0c1314d', 'Ulrich Haltmann', DATETIME '1997-09-20 00:00:00', 'Germany');
 ```
 
-2. **Install dependencies**
-
-```bash
-npm install
-```
-
-3. **Set up environment variables**
-
-Create a `.env.local` file in the project root and fill in your Firebase config values:
-
-```bash
-NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
-NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
-```
-
-You can find these values in the Firebase console under **Project settings > Your apps**.
-
-4. **Run the development server**
-
-```bash
-npm run dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) in your browser.
-
----
-
-## Project Structure
-
-```
-truebalance/
-├── app/
-│   ├── page.tsx          # Homepage (landing page)
-│   ├── login/
-│   │   └── page.tsx      # Login page
-│   ├── register/
-│   │   └── page.tsx      # Register page
-│   └── app/
-│       └── page.tsx      # Main dashboard (expenses, charts, sidebar)
-├── lib/
-│   └── firebase.ts       # Firebase initialization
-├── public/
-├── .env.local            # Environment variables (create with your config values)
-└── README.md
-```
-
----
-
-## Deployment
-
-TrueBalance is designed to be deployed on **Google Cloud**. You can use [Firebase Hosting](https://firebase.google.com/docs/hosting) or [Cloud Run](https://cloud.google.com/run) for deployment.
-
-### Build for production
-
-```bash
-npm run build
-```
-
----
-
-## Which features we'd like to add next
-
-We are currently considering adding these features:
-
-1. **Different currencies** - the ability to choose between multiple currencies, at the moment you can work only with Euros (€)
-2. **Implement database** - the ability to save your added expenses through different sessions and link them to your TrueBalance account
-
----
-
-## Contributing
-
-Contributions are welcome! Feel free to open an issue or submit a pull request.
-
-1. Fork the repository
-2. Create a new branch (`git checkout -b feature/your-feature`)
-3. Commit your changes (`git commit -m 'Add your feature'`)
-4. Push to the branch (`git push origin feature/your-feature`)
-5. Open a Pull Request
+## Deploy
+- Now that all the resources have been created, go to 'Cloud Build' and execute 'deploy-frontend' and 'deploy-api'
+- Then go into subtab 'History' and approve the two pending builds 
+- After the triggers finish building, go to 'Cloud Run' and find the frontend resource
+- There, go to 'Networking' tab and click on the link containing the project number
+- If everything worked correctly, you should see a webpage appear and after a few seconds the dummy data we setup should load
