@@ -87,7 +87,7 @@ function Sidebar({
   ];
 
   return (
-    <aside className="fixed left-0 top-0 w-60 min-h-screen bg-white border-r border-gray-100 flex flex-col py-6 px-4 shrink-0">
+    <aside className="fixed left-0 top-0 w-60 h-screen bg-white border-r border-gray-100 flex flex-col py-6 px-4 shrink-0 overflow-y-auto">
       <div className="flex items-center gap-2 font-bold text-lg text-indigo-600 mb-6 px-2">
         <BarChart2 className="w-5 h-5" />
         TrueBalance
@@ -549,31 +549,6 @@ export default function AppPage() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [customCategories, setCustomCategories] = useState<string[]>([]);
   const [currency, setCurrencyState] = useState<string>("€");
-  
-  /*const [currency, setCurrency] = useState<string>(() => {
-    if (typeof window === "undefined") return "€";
-    return localStorage.getItem("truebalance_currency") || "€";
-  });*/
-
-  /*const [expenses, setExpenses] = useState<Expense[]>(() => {
-    if (typeof window === "undefined") return [];
-    try {
-      const stored = localStorage.getItem("truebalance_expenses");
-      return stored ? JSON.parse(stored) : [];
-    } catch {
-      return [];
-    }
-  });
-
-  const [customCategories, setCustomCategories] = useState<string[]>(() => {
-    if (typeof window === "undefined") return [];
-    try {
-      const stored = localStorage.getItem("truebalance_categories");
-      return stored ? JSON.parse(stored) : [];
-    } catch {
-      return [];
-    }
-  });*/
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (u) => {
@@ -584,17 +559,6 @@ export default function AppPage() {
     return unsub;
   }, [router]);
 
-  /*useEffect(() => {
-    localStorage.setItem("truebalance_expenses", JSON.stringify(expenses));
-  }, [expenses]);
-
-  useEffect(() => {
-    localStorage.setItem("truebalance_categories", JSON.stringify(customCategories));
-  }, [customCategories]);
-
-  useEffect(() => {
-    localStorage.setItem("truebalance_currency", currency);
-  }, [currency]);*/
 
   // ── Realtime Database sync ──────────────────────────────────────────────────
   useEffect(() => {
@@ -689,25 +653,6 @@ export default function AppPage() {
   );
   if (!user) return null;
 
-  /*const handleAddExpense = async (e: Omit<Expense, "id" | "createdAt">) => {
-    const newExpense: Expense = { ...e, id: crypto.randomUUID(), createdAt: null };
-    setExpenses((prev) => [...prev, newExpense]);
-  };
-
-  const handleDeleteCategory = (cat: string) => {
-    setCustomCategories((prev) => prev.filter((c) => c !== cat));
-    setExpenses((prev) => prev.filter((e) => e.category !== cat));
-  };
-
-  const handleDeleteExpense = async (id: string) => {
-    setExpenses((prev) => prev.filter((e) => e.id !== id));
-  };
-
-  const handleLogout = async () => {
-    await signOut(auth);
-    router.push("/");
-  };*/
-
   return (
     <div className="md:ml-60 flex min-h-screen bg-gray-50">
       <div className={`fixed md:static inset-0 z-40 md:z-auto ${mobileMenuOpen ? 'block' : 'hidden'} md:block`}>
@@ -735,6 +680,7 @@ export default function AppPage() {
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className="p-2 hover:bg-gray-100 rounded-lg"
+            aria-label="Toggle navigation menu"
           >
             <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
