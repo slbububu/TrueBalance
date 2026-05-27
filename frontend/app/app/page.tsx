@@ -110,7 +110,7 @@ function Sidebar({
 
       <div className="border-t border-gray-100 pt-4 mt-4">
         <div className="px-2 mb-4">
-           <label className="text-[10px] uppercase font-bold text-gray-400 mb-1 block">Měna</label>
+           <label className="text-[10px] uppercase font-bold text-gray-400 mb-1 block">Currency</label>
            <div className="relative">
              <select 
                 value={currency} 
