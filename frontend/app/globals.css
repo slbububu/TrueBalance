@@ -28,8 +28,3 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
-
-/* Remove default focus outline from Recharts graphs */
-.recharts-wrapper:focus {
-  outline: none;
-}
