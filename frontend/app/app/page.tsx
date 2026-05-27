@@ -50,7 +50,11 @@ const toMonthly = (amount: number, freq: Frequency) =>
 const toYearly = (amount: number, freq: Frequency) =>
   freq === "monthly" ? amount * 12 : amount;
 
-const fmtCurrency = (v: number, symbol: string) => `${symbol}${v.toFixed(2)}`;
+// Upravená funkce pro formátování měny
+const fmtCurrency = (v: number, symbol: string) => {
+  const formatted = v.toFixed(2);
+  return symbol === "Kč" ? `${formatted} ${symbol}` : `${symbol}${formatted}`;
+};
 
 // ─── Sidebar ──────────────────────────────────────────────────────────────────
 
@@ -105,7 +109,6 @@ function Sidebar({
       </nav>
 
       <div className="border-t border-gray-100 pt-4 mt-4">
-        {/* Currency Selector */}
         <div className="px-2 mb-4">
            <label className="text-[10px] uppercase font-bold text-gray-400 mb-1 block">Měna</label>
            <div className="relative">
