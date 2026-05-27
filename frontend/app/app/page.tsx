@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { onAuthStateChanged, signOut, User } from "firebase/auth";
-import { auth } from "@/lib/firebase";
+import { ref, push, remove, onValue, set } from "firebase/database";
+import { auth, db } from "@/lib/firebase";
 import {
   LayoutDashboard, List, PlusCircle, LogOut,
   BarChart2, Trash2, Tag, ChevronDown, X,
@@ -23,7 +24,7 @@ interface Expense {
   amount: number;
   frequency: Frequency;
   category: string;
-  createdAt: null;
+  createdAt: number | null;
 }
 
 type View = "dashboard" | "expenses" | "add";
@@ -533,13 +534,17 @@ export default function AppPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const [dataLoading, setDataLoading] = useState(true);
+  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [customCategories, setCustomCategories] = useState<string[]>([]);
+  const [currency, setCurrencyState] = useState<string>("€");
   
-  const [currency, setCurrency] = useState<string>(() => {
+  /*const [currency, setCurrency] = useState<string>(() => {
     if (typeof window === "undefined") return "€";
     return localStorage.getItem("truebalance_currency") || "€";
-  });
+  });*/
 
-  const [expenses, setExpenses] = useState<Expense[]>(() => {
+  /*const [expenses, setExpenses] = useState<Expense[]>(() => {
     if (typeof window === "undefined") return [];
     try {
       const stored = localStorage.getItem("truebalance_expenses");
@@ -557,7 +562,7 @@ export default function AppPage() {
     } catch {
       return [];
     }
-  });
+  });*/
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (u) => {
@@ -568,7 +573,7 @@ export default function AppPage() {
     return unsub;
   }, [router]);
 
-  useEffect(() => {
+  /*useEffect(() => {
     localStorage.setItem("truebalance_expenses", JSON.stringify(expenses));
   }, [expenses]);
 
@@ -578,16 +583,102 @@ export default function AppPage() {
 
   useEffect(() => {
     localStorage.setItem("truebalance_currency", currency);
-  }, [currency]);
+  }, [currency]);*/
 
-  if (authLoading) return (
+  // ── Realtime Database sync ──────────────────────────────────────────────────
+  useEffect(() => {
+    if (!user) return;
+    const uid = user.uid;
+    setDataLoading(true);
+
+    // Expenses
+    const expensesRef = ref(db, `users/${uid}/expenses`);
+    const unsubExpenses = onValue(expensesRef, (snap) => {
+      const data = snap.val();
+      if (!data) {
+        setExpenses([]);
+      } else {
+        const parsed: Expense[] = Object.entries(data).map(([id, val]: [string, any]) => ({
+          id,
+          name: val.name,
+          amount: val.amount,
+          frequency: val.frequency,
+          category: val.category,
+          createdAt: val.createdAt ?? null,
+        }));
+        parsed.sort((a, b) => (a.createdAt ?? 0) - (b.createdAt ?? 0));
+        setExpenses(parsed);
+      }
+      setDataLoading(false);
+    });
+    // Custom categories
+    const catsRef = ref(db, `users/${uid}/categories`);
+    const unsubCats = onValue(catsRef, (snap) => {
+      const data = snap.val();
+      setCustomCategories(data ? Object.values(data) as string[] : []);
+    });
+    // Currency preference
+    const currencyRef = ref(db, `users/${user.uid}/currency`);
+    const unsubCurrency = onValue(currencyRef, (snap) => {
+      const data = snap.val();
+      if (data) setCurrencyState(data);
+    });
+    return () => {
+      unsubExpenses();
+      unsubCats();
+      unsubCurrency();
+    };
+  }, [user]);
+  // ── Handlers ────────────────────────────────────────────────────────────────
+  const handleAddExpense = async (e: Omit<Expense, "id" | "createdAt">) => {
+    if (!user) return;
+    await push(ref(db, `users/${user.uid}/expenses`), {
+      ...e,
+      createdAt: Date.now(),
+    });
+  };
+  const handleDeleteExpense = async (id: string) => {
+    if (!user) return;
+    await remove(ref(db, `users/${user.uid}/expenses/${id}`));
+  };
+  const handleDeleteCategory = async (cat: string) => {
+    if (!user) return;
+    // Delete all expenses in this category
+    const toDelete = expenses.filter((e) => e.category === cat);
+    await Promise.all(toDelete.map((e) => remove(ref(db, `users/${user.uid}/expenses/${e.id}`))));
+    // Remove category from the list
+    const snap = await new Promise<Record<string, string>>((resolve) => {
+      onValue(ref(db, `users/${user.uid}/categories`), (s) => resolve(s.val() ?? {}), { onlyOnce: true });
+    });
+    const keyToRemove = Object.entries(snap).find(([, v]) => v === cat)?.[0];
+    if (keyToRemove) await remove(ref(db, `users/${user.uid}/categories/${keyToRemove}`));
+  };
+  const handleAddCategory = async (cat: string) => {
+    if (!user) return;
+    await push(ref(db, `users/${user.uid}/categories`), cat);
+  };
+  const setCurrency = async (c: string) => {
+    setCurrencyState(c);
+    if (!user) return;
+    await set(ref(db, `users/${user.uid}/currency`), c);
+  };
+  const handleLogout = async () => {
+    await signOut(auth);
+    setExpenses([]);
+    setCustomCategories([]);
+    setCurrencyState("€");
+    router.push("/");
+  };
+  // ── Guards ──────────────────────────────────────────────────────────────────
+
+  if (authLoading || dataLoading) return (
     <div className="min-h-screen flex items-center justify-center text-gray-400 text-sm">
       Loading…
     </div>
   );
   if (!user) return null;
 
-  const handleAddExpense = async (e: Omit<Expense, "id" | "createdAt">) => {
+  /*const handleAddExpense = async (e: Omit<Expense, "id" | "createdAt">) => {
     const newExpense: Expense = { ...e, id: crypto.randomUUID(), createdAt: null };
     setExpenses((prev) => [...prev, newExpense]);
   };
@@ -604,60 +695,61 @@ export default function AppPage() {
   const handleLogout = async () => {
     await signOut(auth);
     router.push("/");
-  };
+  };*/
 
   return (
-  <div className="md:ml-60 flex min-h-screen bg-gray-50">
-    <div className={`fixed md:static inset-0 z-40 md:z-auto ${mobileMenuOpen ? 'block' : 'hidden'} md:block`}>
-      <Sidebar 
-        view={view} 
-        setView={setView} 
-        onLogout={handleLogout} 
-        user={user}
-        mobileMenuOpen={mobileMenuOpen}
-        setMobileMenuOpen={setMobileMenuOpen}
-        currency={currency}
-        setCurrency={setCurrency}
-      />
-    </div>
+    <div className="md:ml-60 flex min-h-screen bg-gray-50">
+      <div className={`fixed md:static inset-0 z-40 md:z-auto ${mobileMenuOpen ? 'block' : 'hidden'} md:block`}>
+        <Sidebar 
+          view={view} 
+          setView={setView} 
+          onLogout={handleLogout} 
+          user={user}
+          mobileMenuOpen={mobileMenuOpen}
+          setMobileMenuOpen={setMobileMenuOpen}
+          currency={currency}
+          setCurrency={setCurrency}
+        />
+      </div>
 
-    {mobileMenuOpen && (
-      <div 
-        className="fixed inset-0 bg-black/50 md:hidden z-30"
-        onClick={() => setMobileMenuOpen(false)}
-      />
-    )}
+      {mobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 md:hidden z-30"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
 
-    <main className="flex-1 flex flex-col overflow-hidden">
-      <div className="md:hidden flex items-center gap-4 px-4 py-4 bg-white border-b border-gray-100">
-        <button
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="p-2 hover:bg-gray-100 rounded-lg"
-        >
-          <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
-        </button>
-        <div className="flex items-center gap-2 font-bold text-lg text-indigo-600">
-            <BarChart2 className="w-5 h-5" />
-            <span className="font-bold text-indigo-600">TrueBalance</span>
+      <main className="flex-1 flex flex-col overflow-hidden">
+        <div className="md:hidden flex items-center gap-4 px-4 py-4 bg-white border-b border-gray-100">
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="p-2 hover:bg-gray-100 rounded-lg"
+          >
+            <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+          <div className="flex items-center gap-2 font-bold text-lg text-indigo-600">
+              <BarChart2 className="w-5 h-5" />
+              <span className="font-bold text-indigo-600">TrueBalance</span>
+          </div>
         </div>
-      </div>
 
-      <div className="flex-1 p-8 overflow-y-auto">
-        {view === "dashboard" && <DashboardView expenses={expenses} setView={setView} currency={currency} />}
-        {view === "expenses"  && <ExpensesView  expenses={expenses} onDelete={handleDeleteExpense} onDeleteCategory={handleDeleteCategory} currency={currency} />}
-        {view === "add"       && (
-          <AddExpenseView 
-            onAdd={handleAddExpense}
-            customCategories={customCategories}
-            onAddCategory={(c) => setCustomCategories((p) => [...p, c])} 
-            onDeleteCategory={handleDeleteCategory}
-            currency={currency}
-          />
-        )}
-      </div>
-    </main>
-  </div>
-);
+        <div className="flex-1 p-8 overflow-y-auto">
+          {view === "dashboard" && <DashboardView expenses={expenses} setView={setView} currency={currency} />}
+          {view === "expenses"  && <ExpensesView  expenses={expenses} onDelete={handleDeleteExpense} onDeleteCategory={handleDeleteCategory} currency={currency} />}
+          {view === "add"       && (
+            <AddExpenseView 
+              onAdd={handleAddExpense}
+              customCategories={customCategories}
+              //onAddCategory={(c) => setCustomCategories((p) => [...p, c])}
+              onAddCategory={handleAddCategory}
+              onDeleteCategory={handleDeleteCategory}
+              currency={currency}
+            />
+          )}
+        </div>
+      </main>
+    </div>
+  );
 }
