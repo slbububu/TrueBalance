@@ -61,22 +61,33 @@ const steps = [
 
 export default function HomePage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const handleLogoClick = (e: React.MouseEvent) => {
-    if (window.scrollY > 0) {
-      e.preventDefault();
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
-  };
+  
   return (
     <div className="min-h-screen bg-white text-gray-900 font-sans">
 
       {/* Navbar */}
       <header className="sticky top-0 z-50 bg-white/80 backdrop-blur border-b border-gray-100">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div onClick={handleLogoClick} className="flex items-center gap-2 font-bold text-xl text-indigo-600 cursor-pointer">
+          <Link
+            href="/"
+            className="flex items-center gap-2 font-bold text-xl text-indigo-600"
+            onClick={(e) => {
+              // Pokud jde o klasické levé kliknutí bez modifikátorů (Ctrl/Cmd)
+              if (e.button === 0 && !e.ctrlKey && !e.metaKey) {
+                // Pokud uživatel je na hlavní stránce, scrollneme nahoru
+                if (window.location.pathname === '/') {
+                  e.preventDefault();
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }
+              }
+              // Pokud uživatel klikl středním tlačítkem nebo s Ctrl, 
+              // proběhne standardní chování Linku (otevření v nové kartě)
+            }}
+          >
             <BarChart2 className="w-5 h-5" />
             TrueBalance
-          </div>
+          </Link>
+          
           <nav className="hidden md:flex items-center gap-8 text-sm text-gray-600">
             <a href="#features" className="hover:text-indigo-600 transition-colors">Features</a>
             <a href="#how-it-works" className="hover:text-indigo-600 transition-colors">How it works</a>
