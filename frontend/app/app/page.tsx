@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import {onAuthStateChanged, signOut, User } from "firebase/auth";
+import { onAuthStateChanged, signOut, User } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import {
   LayoutDashboard, List, PlusCircle, LogOut,
@@ -28,13 +28,15 @@ interface Expense {
 
 type View = "dashboard" | "expenses" | "add";
 
-// ─── Constants ────────────────────────────────────────────────────────────────
+// ─── Constants & Helpers ──────────────────────────────────────────────────────
 
 const PRESET_CATEGORIES = [
   "Subscriptions", "Housing", "Food & Groceries", "Transport",
   "Health & Fitness", "Entertainment", "Education",
   "Insurance", "Utilities", "Other",
 ];
+
+const CURRENCIES = ["€", "$", "£", "Kč", "¥"];
 
 const COLORS = [
   "#6366f1", "#8b5cf6", "#ec4899", "#f59e0b",
@@ -48,7 +50,7 @@ const toMonthly = (amount: number, freq: Frequency) =>
 const toYearly = (amount: number, freq: Frequency) =>
   freq === "monthly" ? amount * 12 : amount;
 
-const fmtCurrency = (v: number) => `€${v.toFixed(2)}`;
+const fmtCurrency = (v: number, symbol: string) => `${symbol}${v.toFixed(2)}`;
 
 // ─── Sidebar ──────────────────────────────────────────────────────────────────
 
@@ -69,7 +71,6 @@ function Sidebar({ view, setView, onLogout, user, mobileMenuOpen, setMobileMenuO
       <div className="flex items-center gap-2 font-bold text-lg text-indigo-600 mb-6 px-2">
         <BarChart2 className="w-5 h-5" />
         TrueBalance
-        {/* Close button - only on mobile */}
         <div className="md:hidden ml-auto">
             <button
             onClick={() => setMobileMenuOpen(false)}
@@ -123,7 +124,7 @@ function Sidebar({ view, setView, onLogout, user, mobileMenuOpen, setMobileMenuO
 
 // ─── Dashboard View ────────────────────────────────────────────────────────────
 
-function DashboardView({ expenses, setView }: { expenses: Expense[]; setView: (view: View) => void }) {
+function DashboardView({ expenses, setView, currency }: { expenses: Expense[]; setView: (view: View) => void; currency: string }) {
   const [period, setPeriod] = useState<"monthly" | "yearly">("monthly");
 
   const totalMonthly = expenses.reduce((s, e) => s + toMonthly(e.amount, e.frequency), 0);
@@ -139,20 +140,19 @@ function DashboardView({ expenses, setView }: { expenses: Expense[]; setView: (v
   const barData = [...pieData].sort((a, b) => b.value - a.value).slice(0, 6);
 
   const tooltipFormatter = (value: any) => {
-  if (!value && value !== 0) return "";
-  if (Array.isArray(value)) return value.map(v => fmtCurrency(Number(v))).join(", ");
-  return fmtCurrency(Number(value));
-};
+    if (!value && value !== 0) return "";
+    return fmtCurrency(Number(value), currency);
+  };
 
-const CustomTooltip = ({ active, payload, label }: any) => {
-  if (!active || !payload?.length) return null;
-  return (
-    <div className="bg-white border border-gray-200 rounded-xl shadow-md px-3 py-2">
-      <p className="text-xs font-semibold text-gray-800 mb-1">{label}</p>
-      <p className="text-sm font-bold text-gray-500">{fmtCurrency(payload[0].value)}</p>
-    </div>
-  );
-};
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (!active || !payload?.length) return null;
+    return (
+      <div className="bg-white border border-gray-200 rounded-xl shadow-md px-3 py-2">
+        <p className="text-xs font-semibold text-gray-800 mb-1">{label}</p>
+        <p className="text-sm font-bold text-gray-500">{fmtCurrency(payload[0].value, currency)}</p>
+      </div>
+    );
+  };
 
   return (
     <div className="space-y-6">
@@ -174,20 +174,20 @@ const CustomTooltip = ({ active, payload, label }: any) => {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <StatCard label={`Total ${period === "monthly" ? "Monthly" : "Yearly"}`} value={fmtCurrency(total)} accent />
-        <StatCard label={`Total ${period === "monthly" ? "Yearly" : "Monthly"}`} value={fmtCurrency(period === "monthly" ? totalYearly : totalMonthly)} />
-        <StatCard label="Total Daily" value={fmtCurrency(totalMonthly / 30)} />
+        <StatCard label={`Total ${period === "monthly" ? "Monthly" : "Yearly"}`} value={fmtCurrency(total, currency)} accent />
+        <StatCard label={`Total ${period === "monthly" ? "Yearly" : "Monthly"}`} value={fmtCurrency(period === "monthly" ? totalYearly : totalMonthly, currency)} />
+        <StatCard label="Total Daily" value={fmtCurrency(totalMonthly / 30, currency)} />
       </div>
 
       {expenses.length === 0 ? (
         <div className="text-center py-20 text-gray-400 text-sm">
           No expenses yet.{" "}
-            <button
-                onClick={() => setView("add")}
-                className="text-indigo-600 hover:text-indigo-700 font-medium transition-colors cursor-pointer"
-                >
-                Add your first expense
-            </button>
+          <button
+            onClick={() => setView("add")}
+            className="text-indigo-600 hover:text-indigo-700 font-medium transition-colors cursor-pointer"
+          >
+            Add your first expense
+          </button>
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -253,11 +253,13 @@ function StatCard({ label, value, accent }: { label: string; value: string; acce
 function ExpensesView({
   expenses,
   onDelete,
-  onDeleteCategory
+  onDeleteCategory,
+  currency
 }: {
   expenses: Expense[];
   onDelete: (id: string) => void;
   onDeleteCategory: (cat: string) => void;
+  currency: string;
 }) {
   const [pendingDelete, setPendingDelete] = useState<string | null>(null);
 
@@ -265,7 +267,6 @@ function ExpensesView({
   for (const e of expenses) {
     (grouped[e.category] ??= []).push(e);
   }
-  const categories = Object.keys(grouped);
 
   if (expenses.length === 0)
     return (
@@ -293,7 +294,7 @@ function ExpensesView({
           className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden"
         >
           <div className="flex items-center gap-2 px-5 py-3 border-b border-gray-50 bg-gray-50/60">
-            <Tag className="w-3.5 h-3.5" style={{ color: COLORS[i % COLORS.length] }} /> {/* text-indigo-400*/}
+            <Tag className="w-3.5 h-3.5" style={{ color: COLORS[i % COLORS.length] }} />
             <span className="text-sm font-semibold text-gray-700">{cat}</span>
             <button
               onClick={() => setPendingDelete(cat)}
@@ -316,12 +317,12 @@ function ExpensesView({
               </div>
               <div className="text-right mr-4">
                 <p className="text-sm font-semibold text-gray-900">
-                  {fmtCurrency(e.amount)}
+                  {fmtCurrency(e.amount, currency)}
                 </p>
                 <p className="text-xs text-gray-400">
                   {e.frequency === "monthly"
-                    ? `${fmtCurrency(e.amount * 12)}/yr`
-                    : `${fmtCurrency(e.amount / 12)}/mo`}
+                    ? `${fmtCurrency(e.amount * 12, currency)}/yr`
+                    : `${fmtCurrency(e.amount / 12, currency)}/mo`}
                 </p>
               </div>
               <button
@@ -387,20 +388,22 @@ function DeleteCategoryModal({ category, onConfirm, onCancel }: {
   );
 }
 
-function AddExpenseView({ onAdd, customCategories, onAddCategory, onDeleteCategory }: {
+function AddExpenseView({ onAdd, customCategories, onAddCategory, onDeleteCategory, currency, setCurrency }: {
   onAdd: (e: Omit<Expense, "id" | "createdAt">) => Promise<void>;
   customCategories: string[];
   onAddCategory: (c: string) => void;
   onDeleteCategory: (c: string) => void;
+  currency: string;
+  setCurrency: (c: string) => void;
 }) {
   const allCats = [...PRESET_CATEGORIES, ...customCategories];
-  const [name, setName]         = useState("");
-  const [amount, setAmount]     = useState("");
-  const [freq, setFreq]         = useState<Frequency>("monthly");
+  const [name, setName]          = useState("");
+  const [amount, setAmount]      = useState("");
+  const [freq, setFreq]          = useState<Frequency>("monthly");
   const [category, setCategory] = useState(allCats[0]);
-  const [newCat, setNewCat]     = useState("");
-  const [loading, setLoading]   = useState(false);
-  const [success, setSuccess]   = useState(false);
+  const [newCat, setNewCat]      = useState("");
+  const [loading, setLoading]    = useState(false);
+  const [success, setSuccess]    = useState(false);
   const [pendingDelete, setPendingDelete] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -436,6 +439,18 @@ function AddExpenseView({ onAdd, customCategories, onAddCategory, onDeleteCatego
         <p className="text-sm text-gray-400 mt-0.5">Track a new recurring cost.</p>
       </div>
 
+      {/* Currency Settings */}
+      <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-6">
+         <Field label="Selected Currency">
+            <div className="relative">
+                <select value={currency} onChange={(e) => setCurrency(e.target.value)} className={inputCls}>
+                    {CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            </div>
+         </Field>
+      </div>
+
       <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-6">
         <form onSubmit={handleSubmit} className="space-y-4">
           <Field label="Expense Name">
@@ -444,7 +459,7 @@ function AddExpenseView({ onAdd, customCategories, onAddCategory, onDeleteCatego
           </Field>
 
           <div className="grid grid-cols-2 gap-4">
-            <Field label="Amount (€)">
+            <Field label={`Amount (${currency})`}>
               <input type="number" min="0" step="0.01" value={amount}
                 onChange={(e) => setAmount(e.target.value)} required
                 placeholder="0.00" className={inputCls} />
@@ -505,49 +520,58 @@ function AddExpenseView({ onAdd, customCategories, onAddCategory, onDeleteCatego
 
 export default function AppPage() {
   const router = useRouter();
-  //const [customCategories, setCustomCategories] = useState<string[]>([]);
   const [view, setView] = useState<View>("dashboard");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
+  
+  const [currency, setCurrency] = useState<string>(() => {
+    if (typeof window === "undefined") return "€";
+    return localStorage.getItem("truebalance_currency") || "€";
+  });
+
   const [expenses, setExpenses] = useState<Expense[]>(() => {
-  if (typeof window === "undefined") return [];
-  try {
-    const stored = localStorage.getItem("truebalance_expenses");
-    return stored ? JSON.parse(stored) : [];
-  } catch {
-    return [];
-  }
-});
+    if (typeof window === "undefined") return [];
+    try {
+      const stored = localStorage.getItem("truebalance_expenses");
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  });
+
   const [customCategories, setCustomCategories] = useState<string[]>(() => {
-  if (typeof window === "undefined") return [];
-  try {
-    const stored = localStorage.getItem("truebalance_categories");
-    return stored ? JSON.parse(stored) : [];
-  } catch {
-    return [];
-  }
-});
+    if (typeof window === "undefined") return [];
+    try {
+      const stored = localStorage.getItem("truebalance_categories");
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  });
 
   // Auth guard
-useEffect(() => {
-  const unsub = onAuthStateChanged(auth, (u) => {
-    if (!u) router.replace("/login");
-    else setUser(u);
-    setAuthLoading(false);
-  });
-  return unsub;
-}, [router]);
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, (u) => {
+      if (!u) router.replace("/login");
+      else setUser(u);
+      setAuthLoading(false);
+    });
+    return unsub;
+  }, [router]);
 
-  //Save expenses to localStorage()
+  // Save to localStorage
   useEffect(() => {
     localStorage.setItem("truebalance_expenses", JSON.stringify(expenses));
-}, [expenses]);
+  }, [expenses]);
 
-  //Save custom categories to localStorage()
   useEffect(() => {
     localStorage.setItem("truebalance_categories", JSON.stringify(customCategories));
-}, [customCategories]);
+  }, [customCategories]);
+
+  useEffect(() => {
+    localStorage.setItem("truebalance_currency", currency);
+  }, [currency]);
 
   if (authLoading) return (
     <div className="min-h-screen flex items-center justify-center text-gray-400 text-sm">
@@ -556,7 +580,6 @@ useEffect(() => {
   );
   if (!user) return null;
 
-  // TODO: Replace with real Firestore addDoc once Firebase is configured
   const handleAddExpense = async (e: Omit<Expense, "id" | "createdAt">) => {
     const newExpense: Expense = { ...e, id: crypto.randomUUID(), createdAt: null };
     setExpenses((prev) => [...prev, newExpense]);
@@ -578,7 +601,6 @@ useEffect(() => {
 
   return (
   <div className="md:ml-60 flex min-h-screen bg-gray-50">
-    {/* Sidebar - hidden on mobile, visible on md+ */}
     <div className={`fixed md:static inset-0 z-40 md:z-auto ${mobileMenuOpen ? 'block' : 'hidden'} md:block`}>
       <Sidebar 
         view={view} 
@@ -590,7 +612,6 @@ useEffect(() => {
       />
     </div>
 
-    {/* Mobile menu backdrop */}
     {mobileMenuOpen && (
       <div 
         className="fixed inset-0 bg-black/50 md:hidden z-30"
@@ -598,9 +619,7 @@ useEffect(() => {
       />
     )}
 
-    {/* Main content */}
     <main className="flex-1 flex flex-col overflow-hidden">
-      {/* Mobile header with hamburger */}
       <div className="md:hidden flex items-center gap-4 px-4 py-4 bg-white border-b border-gray-100">
         <button
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -617,14 +636,16 @@ useEffect(() => {
       </div>
 
       <div className="flex-1 p-8 overflow-y-auto">
-        {view === "dashboard" && <DashboardView expenses={expenses} setView={setView} />}
-        {view === "expenses"  && <ExpensesView  expenses={expenses} onDelete={handleDeleteExpense} onDeleteCategory={handleDeleteCategory} />}
+        {view === "dashboard" && <DashboardView expenses={expenses} setView={setView} currency={currency} />}
+        {view === "expenses"  && <ExpensesView  expenses={expenses} onDelete={handleDeleteExpense} onDeleteCategory={handleDeleteCategory} currency={currency} />}
         {view === "add"       && (
           <AddExpenseView 
             onAdd={handleAddExpense}
             customCategories={customCategories}
             onAddCategory={(c) => setCustomCategories((p) => [...p, c])} 
             onDeleteCategory={handleDeleteCategory}
+            currency={currency}
+            setCurrency={setCurrency}
           />
         )}
       </div>
