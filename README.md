@@ -40,7 +40,7 @@ TrueBalance is a free, open-source personal finance tracking web app that helps 
 1. **Clone the repository**
 
 ```bash
-git clone https://github.com/JetLanzo/truebalance.git
+git clone -b cloud https://github.com/slbububu/TrueBalance.git
 cd truebalance
 ```
 
