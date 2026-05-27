@@ -240,7 +240,7 @@ export default function HomePage() {
             <BarChart2 className="w-4 h-4 text-indigo-500" />
             TrueBalance
           </div>
-          <p className="text-center">Shipped to you by @JetLanzo and @sibububu</p>
+          <p className="text-center">Shipped to you by @JetLanzo and @slbububu</p>
           <a href="https://github.com/slbububu/TrueBalance/tree/cloud" target="_blank" rel="noopener noreferrer" className="hover:text-indigo-500 transition-colors flex items-center gap-1">
             <GithubIcon className="w-4 h-4" /> GitHub
           </a>
