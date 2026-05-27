@@ -132,19 +132,19 @@ export default function HomePage() {
           </a>
         </div>
 
-        {/* Hero image */}
+        {/* Hero image - upraveno pro responzivní chování */}
         <div className="mt-16 rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
           <button
             onClick={() => setIsModalOpen(true)}
             className="w-full cursor-pointer hover:opacity-90 transition-opacity"
           >
-            <div className="relative w-full h-[440px] overflow-hidden">
+            {/* Pomocí aspect-[16/9] zajistíš, že box bude mít vždy správný tvar */}
+            <div className="relative w-full aspect-[16/9] overflow-hidden">
               <Image
                 src="/app-preview.png"
                 alt="TrueBalance app preview"
-                width={1919}
-                height={1079}
-                className="w-full h-full object-cover object-top"
+                fill
+                className="object-cover object-top"
                 priority
               />
             </div>
