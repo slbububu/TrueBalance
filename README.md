@@ -40,7 +40,7 @@ TrueBalance is a free, open-source personal finance tracking web app that helps 
 1. **Clone the repository**
 
 ```bash
-git clone https://github.com/JetLanzo/truebalance.git
+git clone -b cloud https://github.com/slbububu/TrueBalance.git
 cd truebalance
 ```
 
@@ -79,18 +79,23 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ```
 truebalance/
-├── app/
-│   ├── page.tsx          # Homepage (landing page)
-│   ├── login/
-│   │   └── page.tsx      # Login page
-│   ├── register/
-│   │   └── page.tsx      # Register page
-│   └── app/
-│       └── page.tsx      # Main dashboard (expenses, charts, sidebar)
-├── lib/
-│   └── firebase.ts       # Firebase initialization
-├── public/
-├── .env.local            # Environment variables (create with your config values)
+├── api/                    # Backend / API services
+├── cloudbuild_api.yaml     # CI/CD config for API
+├── cloudbuild_frontend.yaml# CI/CD config for Frontend
+├── frontend/               # Next.js web application
+│   ├── app/                # App Router
+│   │   ├── app/            # Main dashboard folder
+│   │   │   └── page.tsx
+│   │   ├── login/
+│   │   │   └── page.tsx
+│   │   ├── register/
+│   │   │   └── page.tsx
+│   │   ├── layout.tsx
+│   │   └── page.tsx        # Homepage (landing)
+│   ├── lib/
+│   │   └── firebase.ts
+│   ├── public/
+│   └── .env.production
 └── README.md
 ```
 
@@ -112,8 +117,7 @@ npm run build
 
 We are currently considering adding these features:
 
-1. **Different currencies** - the ability to choose between multiple currencies, at the moment you can work only with Euros (€)
-2. **Implement database** - the ability to save your added expenses through different sessions and link them to your TrueBalance account
+1. **Implement database** - the ability to save your added expenses through different sessions and link them to your TrueBalance account
 
 ---
 

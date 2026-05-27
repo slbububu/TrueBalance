@@ -39,11 +39,23 @@ const PRESET_CATEGORIES = [
 
 const CURRENCIES = ["€", "$", "£", "Kč", "¥"];
 
-const COLORS = [
-  "#6366f1", "#8b5cf6", "#ec4899", "#f59e0b",
-  "#10b981", "#3b82f6", "#ef4444", "#14b8a6",
-  "#f97316", "#84cc16",
-];
+// Stable color map
+const CATEGORY_COLORS: Record<string, string> = {
+  "Subscriptions": "#6366f1",
+  "Housing": "#f59e0b",
+  "Food & Groceries": "#8b5cf6",
+  "Transport": "#ec4899",
+  "Health & Fitness": "#10b981",
+  "Entertainment": "#3b82f6",
+  "Education": "#ef4444",
+  "Insurance": "#14b8a6",
+  "Utilities": "#f97316",
+  "Other": "#84cc16",
+};
+
+const getCategoryColor = (category: string) => {
+  return CATEGORY_COLORS[category] || "#94a3b8"; // Default gray for unknown custom categories
+};
 
 const toMonthly = (amount: number, freq: Frequency) =>
   freq === "yearly" ? amount / 12 : amount;
@@ -51,7 +63,6 @@ const toMonthly = (amount: number, freq: Frequency) =>
 const toYearly = (amount: number, freq: Frequency) =>
   freq === "monthly" ? amount * 12 : amount;
 
-// Upravená funkce pro formátování měny
 const fmtCurrency = (v: number, symbol: string) => {
   const formatted = v.toFixed(2);
   return symbol === "Kč" ? `${formatted} ${symbol}` : `${symbol}${formatted}`;
@@ -118,7 +129,7 @@ function Sidebar({
                 onChange={(e) => setCurrency(e.target.value)} 
                 className="w-full bg-gray-50 border border-gray-200 rounded-lg px-2 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 appearance-none"
              >
-                {CURRENCIES.map(c => <option key={c} value={c}>{c}</option>)}
+               {CURRENCIES.map(c => <option key={c} value={c}>{c}</option>)}
              </select>
              <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-400 pointer-events-none" />
            </div>
@@ -220,18 +231,18 @@ function DashboardView({ expenses, setView, currency }: { expenses: Expense[]; s
               <PieChart>
                 <Pie data={pieData} cx="50%" cy="50%" innerRadius={60} outerRadius={95}
                   dataKey="value" paddingAngle={3}>
-                  {pieData.map((_, i) => (
-                    <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                  {pieData.map((d) => (
+                    <Cell key={d.name} fill={getCategoryColor(d.name)} />
                   ))}
                 </Pie>
                 <Tooltip formatter={tooltipFormatter} />
               </PieChart>
             </ResponsiveContainer>
             <div className="flex flex-wrap gap-2 mt-2">
-              {pieData.map((d, i) => (
+              {pieData.map((d) => (
                 <span key={d.name} className="flex items-center gap-1 text-xs text-gray-600">
                   <span className="w-2.5 h-2.5 rounded-full inline-block"
-                    style={{ background: COLORS[i % COLORS.length] }} />
+                    style={{ background: getCategoryColor(d.name) }} />
                   {d.name}
                 </span>
               ))}
@@ -247,8 +258,8 @@ function DashboardView({ expenses, setView, currency }: { expenses: Expense[]; s
                 <YAxis tick={{ fontSize: 10 }} />
                 <Tooltip content={<CustomTooltip />} />
                 <Bar dataKey="value" radius={[6, 6, 0, 0]}>
-                  {barData.map((_, i) => (
-                    <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                  {barData.map((d) => (
+                    <Cell key={d.name} fill={getCategoryColor(d.name)} />
                   ))}
                 </Bar>
               </BarChart>
@@ -311,13 +322,13 @@ function ExpensesView({
         />
       )}
       <h1 className="text-2xl font-bold text-gray-900">My Expenses</h1>
-      {Object.entries(grouped).map(([cat, items], i) => (
+      {Object.entries(grouped).map(([cat, items]) => (
         <div
           key={cat}
           className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden"
         >
           <div className="flex items-center gap-2 px-5 py-3 border-b border-gray-50 bg-gray-50/60">
-            <Tag className="w-3.5 h-3.5" style={{ color: COLORS[i % COLORS.length] }} />
+            <Tag className="w-3.5 h-3.5" style={{ color: getCategoryColor(cat) }} />
             <span className="text-sm font-semibold text-gray-700">{cat}</span>
             <button
               onClick={() => setPendingDelete(cat)}
