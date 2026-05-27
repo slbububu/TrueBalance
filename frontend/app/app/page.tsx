@@ -54,11 +54,15 @@ const fmtCurrency = (v: number, symbol: string) => `${symbol}${v.toFixed(2)}`;
 
 // ─── Sidebar ──────────────────────────────────────────────────────────────────
 
-function Sidebar({ view, setView, onLogout, user, mobileMenuOpen, setMobileMenuOpen }: {
+function Sidebar({ 
+  view, setView, onLogout, user, mobileMenuOpen, setMobileMenuOpen, currency, setCurrency 
+}: {
   view: View; setView: (v: View) => void;
   onLogout: () => void; user: User;
   mobileMenuOpen: boolean;
   setMobileMenuOpen: (open: boolean) => void;
+  currency: string;
+  setCurrency: (c: string) => void;
 }) {
   const items: { id: View; label: string; icon: React.ReactNode }[] = [
     { id: "dashboard", label: "Dashboard",   icon: <LayoutDashboard className="w-4 h-4" /> },
@@ -101,6 +105,21 @@ function Sidebar({ view, setView, onLogout, user, mobileMenuOpen, setMobileMenuO
       </nav>
 
       <div className="border-t border-gray-100 pt-4 mt-4">
+        {/* Currency Selector */}
+        <div className="px-2 mb-4">
+           <label className="text-[10px] uppercase font-bold text-gray-400 mb-1 block">Měna</label>
+           <div className="relative">
+             <select 
+                value={currency} 
+                onChange={(e) => setCurrency(e.target.value)} 
+                className="w-full bg-gray-50 border border-gray-200 rounded-lg px-2 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 appearance-none"
+             >
+                {CURRENCIES.map(c => <option key={c} value={c}>{c}</option>)}
+             </select>
+             <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-400 pointer-events-none" />
+           </div>
+        </div>
+
         <div className="flex items-center gap-3 px-2 mb-3">
           <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-sm">
             {(user.displayName ?? user.email ?? "U")[0].toUpperCase()}
@@ -388,13 +407,12 @@ function DeleteCategoryModal({ category, onConfirm, onCancel }: {
   );
 }
 
-function AddExpenseView({ onAdd, customCategories, onAddCategory, onDeleteCategory, currency, setCurrency }: {
+function AddExpenseView({ onAdd, customCategories, onAddCategory, onDeleteCategory, currency }: {
   onAdd: (e: Omit<Expense, "id" | "createdAt">) => Promise<void>;
   customCategories: string[];
   onAddCategory: (c: string) => void;
   onDeleteCategory: (c: string) => void;
   currency: string;
-  setCurrency: (c: string) => void;
 }) {
   const allCats = [...PRESET_CATEGORIES, ...customCategories];
   const [name, setName]          = useState("");
@@ -437,18 +455,6 @@ function AddExpenseView({ onAdd, customCategories, onAddCategory, onDeleteCatego
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Add Expense</h1>
         <p className="text-sm text-gray-400 mt-0.5">Track a new recurring cost.</p>
-      </div>
-
-      {/* Currency Settings */}
-      <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-6">
-         <Field label="Selected Currency">
-            <div className="relative">
-                <select value={currency} onChange={(e) => setCurrency(e.target.value)} className={inputCls}>
-                    {CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
-                </select>
-                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-            </div>
-         </Field>
       </div>
 
       <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-6">
@@ -550,7 +556,6 @@ export default function AppPage() {
     }
   });
 
-  // Auth guard
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (u) => {
       if (!u) router.replace("/login");
@@ -560,7 +565,6 @@ export default function AppPage() {
     return unsub;
   }, [router]);
 
-  // Save to localStorage
   useEffect(() => {
     localStorage.setItem("truebalance_expenses", JSON.stringify(expenses));
   }, [expenses]);
@@ -609,6 +613,8 @@ export default function AppPage() {
         user={user}
         mobileMenuOpen={mobileMenuOpen}
         setMobileMenuOpen={setMobileMenuOpen}
+        currency={currency}
+        setCurrency={setCurrency}
       />
     </div>
 
@@ -645,7 +651,6 @@ export default function AppPage() {
             onAddCategory={(c) => setCustomCategories((p) => [...p, c])} 
             onDeleteCategory={handleDeleteCategory}
             currency={currency}
-            setCurrency={setCurrency}
           />
         )}
       </div>
