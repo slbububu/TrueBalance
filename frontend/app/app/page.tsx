@@ -227,11 +227,11 @@ function DashboardView({ expenses, setView, currency }: { expenses: Expense[]; s
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
             <h2 className="text-sm font-semibold text-gray-700 mb-4">Spending by Category</h2>
-            {/* Height changed from 240 to 360 */}
-            <ResponsiveContainer width="100%" height={360}>
+            {/* Height optimized to 480 for an ultra-spacious visual look */}
+            <ResponsiveContainer width="100%" height={480}>
               <PieChart>
-                {/* innerRadius adjusted from 60->90 and outerRadius from 95->135 to make the wheel bigger */}
-                <Pie data={pieData} cx="50%" cy="50%" innerRadius={90} outerRadius={135}
+                {/* innerRadius adjusted to 120 and outerRadius to 170 to match the larger canvas size */}
+                <Pie data={pieData} cx="50%" cy="50%" innerRadius={120} outerRadius={170}
                   dataKey="value" paddingAngle={3}>
                   {pieData.map((d) => (
                     <Cell key={d.name} fill={getCategoryColor(d.name)} />
@@ -253,14 +253,15 @@ function DashboardView({ expenses, setView, currency }: { expenses: Expense[]; s
 
           <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
             <h2 className="text-sm font-semibold text-gray-700 mb-4">Top Categories</h2>
-            {/* Height changed from 240 to 360 */}
-            <ResponsiveContainer width="100%" height={360}>
+            {/* Height optimized to 480 to vertically align with the donut chart component */}
+            <ResponsiveContainer width="100%" height={480}>
               <BarChart data={barData} margin={{ top: 10, right: 0, left: -10, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
                 <XAxis dataKey="name" tick={{ fontSize: 10 }} />
                 <YAxis tick={{ fontSize: 10 }} />
                 <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="value" radius={[6, 6, 0, 0]}>
+                {/* barSize assigned to 45 so elements don't look overly skinny on tall viewports */}
+                <Bar dataKey="value" radius={[6, 6, 0, 0]} barSize={45}>
                   {barData.map((d) => (
                     <Cell key={d.name} fill={getCategoryColor(d.name)} />
                   ))}
@@ -389,7 +390,6 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-// ... Rest of the component logic remains cleanly preserved below
 function DeleteCategoryModal({ category, onConfirm, onCancel }: {
   category: string;
   onConfirm: () => void;
