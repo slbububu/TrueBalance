@@ -80,7 +80,7 @@ export default function HomePage() {
           <nav className="hidden md:flex items-center gap-8 text-sm text-gray-600">
             <a href="#features" className="hover:text-indigo-600 transition-colors">Features</a>
             <a href="#how-it-works" className="hover:text-indigo-600 transition-colors">How it works</a>
-            <a href="https://github.com/JetLanzo/TrueBalance" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-indigo-600 transition-colors"><GithubIcon className="w-4 h-4" />GitHub</a>
+            <a href="https://github.com/slbububu/TrueBalance/tree/cloud" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-indigo-600 transition-colors"><GithubIcon className="w-4 h-4" />GitHub</a>
           </nav>
           <Link
             href="/login"
@@ -112,7 +112,7 @@ export default function HomePage() {
             Get Started - It's Free <ArrowRight className="w-4 h-4" />
           </Link>
           <a
-            href="https://github.com/JetLanzo/truebalance-local"
+            href="https://github.com/slbububu/TrueBalance/tree/cloud"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center justify-center gap-2 bg-gray-100 text-gray-700 px-6 py-3 rounded-xl font-semibold hover:bg-gray-200 transition-colors"
@@ -230,7 +230,7 @@ export default function HomePage() {
             TrueBalance
           </div>
           <p className="text-center">Shipped to you by @JetLanzo and @sibububu</p>
-                      <a href="https://github.com/JetLanzo/TrueBalance" target="_blank" rel="noopener noreferrer" className="hover:text-indigo-500 transition-colors flex items-center gap-1">
+          <a href="https://github.com/slbububu/TrueBalance/tree/cloud" target="_blank" rel="noopener noreferrer" className="hover:text-indigo-500 transition-colors flex items-center gap-1">
             <GithubIcon className="w-4 h-4" /> GitHub
           </a>
         </div>
