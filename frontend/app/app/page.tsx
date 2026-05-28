@@ -278,7 +278,7 @@ function DashboardView({ expenses, setView, currency }: { expenses: Expense[]; s
                 <YAxis tick={{ fontSize: 10 }} />
                 <Tooltip content={<CustomTooltip />} />
                 {/* barSize assigned to 45 so elements don't look overly skinny on tall viewports */}
-                <Bar dataKey="value" radius={[6, 6, 0, 0]} barSize={45}>
+                <Bar dataKey="value" radius={[6, 6, 0, 0]}>
                   {barData.map((d) => (
                     <Cell key={d.name} fill={getCategoryColor(d.name)} />
                   ))}
