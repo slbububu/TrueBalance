@@ -99,7 +99,7 @@ function Sidebar({
   ];
 
   return (
-    <aside className="fixed left-0 top-0 w-60 h-screen bg-white border-r border-gray-100 flex flex-col py-6 px-4 shrink-0 overflow-y-auto">
+    <aside className="fixed left-0 top-0 w-60 h-dvh bg-white border-r border-gray-100 flex flex-col py-6 px-4 shrink-0 overflow-y-auto">
       <div className="flex items-center gap-2 font-bold text-lg text-indigo-600 mb-6 px-2">
         <BarChart2 className="w-5 h-5" />
         TrueBalance
