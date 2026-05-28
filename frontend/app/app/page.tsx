@@ -207,12 +207,12 @@ function DashboardView({ expenses, setView, currency }: { expenses: Expense[]; s
 
   return (
     <div className="space-y-6">
-      <div className="flex min-[400.01px]:items-center justify-between max-[400px]:flex-col max-[400px]:gap-3">
+      <div className="flex min-[450.01px]:items-center justify-between max-[450px]:flex-col max-[450px]:gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
           <p className="text-sm text-gray-400 mt-0.5">Your spending overview</p>
         </div>
-        <div className="flex items-center bg-gray-100 rounded-xl p-1 gap-1 max-[400px]:self-start">
+        <div className="flex items-center bg-gray-100 rounded-xl p-1 gap-1 max-[450px]:self-start">
           {(["monthly", "yearly"] as const).map((p) => (
             <button key={p} onClick={() => setPeriod(p)}
               className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer capitalize
@@ -348,12 +348,12 @@ function ExpensesView({
           key={cat}
           className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden"
         >
-          <div className="flex items-center gap-2 px-5 py-3 border-b border-gray-50 bg-gray-50/60">
+          <div className="flex items-center gap-2 px-5 py-3 border-b border-gray-50 bg-gray-50/60 group">
             <Tag className="w-3.5 h-3.5" style={{ color: getCategoryColor(cat) }} />
             <span className="text-sm font-semibold text-gray-700">{cat}</span>
             <button
               onClick={() => setPendingDelete(cat)}
-              className="ml-auto opacity-0 cursor-pointer hover:opacity-100 text-gray-300 hover:text-red-400 transition-all"
+              className="ml-auto max-[768px]:opacity-100 cursor-pointer min-[768.01px]:opacity-0 min-[768.01px]:hover:opacity-100 min-[768.01px]:group-hover:opacity-100 text-gray-300 hover:text-red-400 transition-all"
             >
               <Trash2 className="w-4 h-4" />
             </button>
@@ -382,7 +382,7 @@ function ExpensesView({
               </div>
               <button
                 onClick={() => onDelete(e.id)}
-                className="opacity-0 cursor-pointer group-hover:opacity-100 text-gray-300 hover:text-red-400 transition-all"
+                className="min-[768.01px]:opacity-0 max-[768px]:opacity-100 cursor-pointer min-[768.01px]:group-hover:opacity-100 min-[768.01px]:text-gray-300 max-[768px]:text-red-400 min-[768.01px]:hover:text-red-400 transition-all"
               >
                 <Trash2 className="w-4 h-4" />
               </button>
