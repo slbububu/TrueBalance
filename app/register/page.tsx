@@ -16,51 +16,49 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
 
   function friendlyError(code: string): string {
-  switch (code) {
-    case "auth/user-not-found":     return "No account found with this email.";
-    case "auth/wrong-password":     return "Incorrect password. Please try again.";
-    case "auth/invalid-email":      return "Please enter a valid email address.";
-    case "auth/too-many-requests":  return "Too many attempts. Please try again later.";
-    case "auth/popup-closed-by-user": return "Google sign-in was cancelled.";
-    default:                        return "Something went wrong. Ensure you meet the password requirements and try again.";
+    switch (code) {
+      case "auth/user-not-found":     return "No account found with this email.";
+      case "auth/wrong-password":     return "Incorrect password. Please try again.";
+      case "auth/invalid-email":      return "Please enter a valid email address.";
+      case "auth/too-many-requests":  return "Too many attempts. Please try again later.";
+      case "auth/popup-closed-by-user": return "Google sign-in was cancelled.";
+      default:                        return "Something went wrong. Ensure you meet the password requirements and try again.";
+    }
   }
-}
 
-
-const handleEmailRegister = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setError("");
-  if (password.length < 8) {
-    setError("Password must be at least 8 characters.");
-    return;
-  }
-  setLoading(true);
-  try {
-    const cred = await createUserWithEmailAndPassword(auth, email, password);
-    await updateProfile(cred.user, { displayName: name });
-    router.push("/app");
-  } catch (err: any) {
-    setError(friendlyError(err.code));
-  } finally {
-    setLoading(false);
-  }
-};
+  const handleEmailRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const cred = await createUserWithEmailAndPassword(auth, email, password);
+      await updateProfile(cred.user, { displayName: name });
+      router.push("/app");
+    } catch (err: any) {
+      setError(friendlyError(err.code));
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleGoogleLogin = async () => {
-  setLoading(true);
-  try {
-    await signInWithPopup(auth, new GoogleAuthProvider());
-    router.push("/app");
-  } catch (err: any) {
-    setError(friendlyError(err.code));
-  } finally {
-    setLoading(false);
-  }
-};
+    setLoading(true);
+    try {
+      await signInWithPopup(auth, new GoogleAuthProvider());
+      router.push("/app");
+    } catch (err: any) {
+      setError(friendlyError(err.code));
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4">
-
       <Link href="/" className="flex items-center gap-2 text-indigo-600 font-bold text-xl mb-8">
         <BarChart2 className="w-5 h-5" />
         TrueBalance
@@ -108,14 +106,17 @@ const handleEmailRegister = async (e: React.FormEvent) => {
               className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
             />
           </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">Password (lowercase, uppercase letters and numbers)</label>
+          
+          {/* Fixed Password Section */}
+          <div className="space-y-1">
+            <label className="block text-xs font-medium text-gray-700">Password</label>
+            <p className="text-[10px] text-gray-500">Min. 8 characters, upper & lowercase</p>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              placeholder="Min. 8 characters"
+              placeholder="••••••••"
               className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
             />
           </div>
@@ -154,4 +155,3 @@ function GoogleIcon() {
     </svg>
   );
 }
-
