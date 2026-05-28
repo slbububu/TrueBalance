@@ -110,7 +110,7 @@ export default function RegisterPage() {
           {/* Corrected Password Section */}
           <div className="space-y-1">
             <label className="block text-xs font-medium text-gray-700">Password</label>
-            <p className="text-[10px] text-gray-500">Min. 8 characters, upper & lowercase</p>
+            <p className="text-[10px] text-gray-500">Min. 8 characters, upper & lowercase letters and numbers</p>
             <input
               type="password"
               value={password}
