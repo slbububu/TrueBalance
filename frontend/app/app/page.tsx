@@ -68,6 +68,18 @@ const fmtCurrency = (v: number, symbol: string) => {
   return symbol === "Kč" ? `${formatted} ${symbol}` : `${symbol}${formatted}`;
 };
 
+
+function useIsMobile(breakpoint = 450) {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < breakpoint);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, [breakpoint]);
+  return isMobile;
+}
+
 // ─── Sidebar ──────────────────────────────────────────────────────────────────
 
 function Sidebar({ 
@@ -160,6 +172,11 @@ function Sidebar({
 
 function DashboardView({ expenses, setView, currency }: { expenses: Expense[]; setView: (view: View) => void; currency: string }) {
   const [period, setPeriod] = useState<"monthly" | "yearly">("monthly");
+  const isMobile = useIsMobile();
+
+  const pieHeight =    isMobile ? 200 : 480; // Adjusted height for mobile vs desktop
+  const pieInnerRadius = isMobile ? 45 : 120;
+  const pieOuterRadius = isMobile ? 75 : 170; 
 
   const totalMonthly = expenses.reduce((s, e) => s + toMonthly(e.amount, e.frequency), 0);
   const totalYearly  = expenses.reduce((s, e) => s + toYearly(e.amount, e.frequency), 0);
@@ -228,10 +245,10 @@ function DashboardView({ expenses, setView, currency }: { expenses: Expense[]; s
           <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
             <h2 className="text-sm font-semibold text-gray-700 mb-4">Spending by Category</h2>
             {/* Height optimized to 480 for an ultra-spacious visual look */}
-            <ResponsiveContainer width="100%" height={480}>
+            <ResponsiveContainer width="100%" height={pieHeight}>
               <PieChart>
                 {/* innerRadius adjusted to 120 and outerRadius to 170 to match the larger canvas size */}
-                <Pie data={pieData} cx="50%" cy="50%" innerRadius={120} outerRadius={170}
+                <Pie data={pieData} cx="50%" cy="50%" innerRadius={pieInnerRadius} outerRadius={pieOuterRadius}
                   dataKey="value" paddingAngle={3}>
                   {pieData.map((d) => (
                     <Cell key={d.name} fill={getCategoryColor(d.name)} />
