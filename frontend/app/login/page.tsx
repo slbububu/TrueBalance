@@ -32,7 +32,7 @@ export default function LoginPage() {
     e.preventDefault();
     setError("");
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 600)); // simulate network
+    await new Promise((r) => setTimeout(r, 600));
     if (email === DUMMY_USER.email && password === DUMMY_USER.password) {
       router.push("/app");
     } else {
@@ -77,18 +77,15 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4">
 
-      {/* Logo */}
       <Link href="/" className="flex items-center gap-2 text-indigo-600 font-bold text-xl mb-8">
         <BarChart2 className="w-5 h-5" />
         TrueBalance
       </Link>
 
-      {/* Card */}
       <div className="w-full max-w-sm bg-white border border-gray-200 rounded-2xl shadow-sm p-8">
         <h1 className="text-2xl font-bold text-gray-900 mb-1">Welcome back</h1>
         <p className="text-sm text-gray-500 mb-6">Sign in to your TrueBalance account.</p>
 
-        {/* Google */}
         <button
           onClick={handleGoogleLogin}
           disabled={loading}
@@ -104,7 +101,6 @@ export default function LoginPage() {
           <div className="flex-1 h-px bg-gray-100" />
         </div>
 
-        {/* Email / Password */}
         <form onSubmit={handleEmailLogin} className="space-y-4">
           <div>
             <label className="block text-xs font-medium text-gray-700 mb-1">Email</label>

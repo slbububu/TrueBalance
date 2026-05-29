@@ -72,16 +72,12 @@ export default function HomePage() {
             href="/"
             className="flex items-center gap-2 font-bold text-xl text-indigo-600"
             onClick={(e) => {
-              // Pokud jde o klasické levé kliknutí bez modifikátorů (Ctrl/Cmd)
               if (e.button === 0 && !e.ctrlKey && !e.metaKey) {
-                // Pokud uživatel je na hlavní stránce, scrollneme nahoru
                 if (window.location.pathname === '/') {
                   e.preventDefault();
                   window.scrollTo({ top: 0, behavior: "smooth" });
                 }
               }
-              // Pokud uživatel klikl středním tlačítkem nebo s Ctrl, 
-              // proběhne standardní chování Linku (otevření v nové kartě)
             }}
           >
             <BarChart2 className="w-5 h-5" />
@@ -132,13 +128,12 @@ export default function HomePage() {
           </a>
         </div>
 
-        {/* Hero image - upraveno pro responzivní chování */}
+        {/* Hero image - responsive */}
         <div className="mt-16 rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
           <button
             onClick={() => setIsModalOpen(true)}
             className="w-full cursor-pointer hover:opacity-90 transition-opacity"
           >
-            {/* Pomocí aspect-[16/9] zajistíš, že box bude mít vždy správný tvar */}
             <div className="relative w-full aspect-[16/9] overflow-hidden">
               <Image
                 src="/app-preview.png"

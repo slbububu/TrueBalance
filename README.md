@@ -12,6 +12,7 @@ TrueBalance is a free, open-source personal finance tracking web app that helps 
 - 🔄 **Monthly / Yearly toggle** — switch between monthly and yearly totals at any time
 - 🗑️ **Delete expenses and categories** — remove individual expenses or entire categories with all their associated expenses when you don't need them
 - 🔐 **Authentication** — sign in with Email/Password or your Google account via Firebase Auth
+- 💾 **Realtime database** - save your expenses across devices in real time
 - 📱 **Responsive design** — fully usable on mobile with a collapsible sidebar and a sticky top navbar
 
 ---
@@ -21,7 +22,7 @@ TrueBalance is a free, open-source personal finance tracking web app that helps 
 - **Framework** — [Next.js](https://nextjs.org/) (App Router)
 - **Language** — TypeScript
 - **Styling** — [Tailwind CSS](https://tailwindcss.com/)
-- **User Authentication** — [Firebase](https://firebase.google.com/)
+- **User Authentication and Realtime Database** — [Firebase](https://firebase.google.com/)
 - **Charts** — [Recharts](https://recharts.org/)
 - **Icons** — [Lucide React](https://lucide.dev/)
 
@@ -34,6 +35,7 @@ TrueBalance is a free, open-source personal finance tracking web app that helps 
 - Node.js 18+
 - A [Firebase](https://console.firebase.google.com/) project with:
   - **Authentication** enabled (Email/Password + Google)
+  - **Realtime database** enabled
 
 ### Installation
 
@@ -57,6 +59,7 @@ Create a `.env.local` file in the project root and fill in your Firebase config 
 ```bash
 NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key
 NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_DATABASE_URL=your_url.firebasedatabase.app
 NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
 NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
 NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
@@ -110,14 +113,6 @@ TrueBalance is designed to be deployed on **Google Cloud**. You can use [Firebas
 ```bash
 npm run build
 ```
-
----
-
-## Which features we'd like to add next
-
-We are currently considering adding these features:
-
-1. **Implement database** - the ability to save your added expenses through different sessions and link them to your TrueBalance account
 
 ---
 

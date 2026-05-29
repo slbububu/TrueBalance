@@ -29,7 +29,7 @@ interface Expense {
 
 type View = "dashboard" | "expenses" | "add";
 
-// ─── Constants & Helpers ──────────────────────────────────────────────────────
+// ─── Constants ────────────────────────────────────────────────────────────────
 
 const PRESET_CATEGORIES = [
   "Subscriptions", "Housing", "Food & Groceries", "Transport",
@@ -39,7 +39,6 @@ const PRESET_CATEGORIES = [
 
 const CURRENCIES = ["€", "$", "£", "Kč", "¥"];
 
-// Stable color map
 const CATEGORY_COLORS: Record<string, string> = {
   "Subscriptions": "#6366f1",
   "Housing": "#f59e0b",
@@ -121,12 +120,12 @@ function Sidebar({
               setView(item.id);
               setMobileMenuOpen(false);
             }}
-            className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors cursor-pointer text-left
+            className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium cursor-pointer text-left
               ${view === item.id
-                ? "bg-indigo-50 text-indigo-600"
+                ? "bg-gray-300 text-gray-800 font-semibold"
                 : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"}`}
           >
-            {item.icon}
+
             {item.label}
           </button>
         ))}
@@ -148,7 +147,7 @@ function Sidebar({
         </div>
 
         <div className="flex items-center gap-3 px-2 mb-3">
-          <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-sm">
+          <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 font-bold text-sm">
             {(user.displayName ?? user.email ?? "U")[0].toUpperCase()}
           </div>
           <div className="overflow-hidden">
@@ -158,9 +157,8 @@ function Sidebar({
         </div>
         <button
           onClick={onLogout}
-          className="flex items-center gap-2 text-sm text-gray-500 hover:text-red-500 transition-colors cursor-pointer px-2 py-1.5 w-full rounded-lg hover:bg-red-50"
+          className="flex items-center gap-2 text-sm text-red-500 font-semibold hover:text-red-500 transition-colors cursor-pointer px-2 py-1.5 w-full rounded-lg hover:bg-red-500 hover:text-white"
         >
-          <LogOut className="w-4 h-4" />
           Log out
         </button>
       </div>
@@ -244,10 +242,8 @@ function DashboardView({ expenses, setView, currency }: { expenses: Expense[]; s
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
             <h2 className="text-sm font-semibold text-gray-700 mb-4">Spending by Category</h2>
-            {/* Height optimized to 480 for an ultra-spacious visual look */}
             <ResponsiveContainer width="100%" height={pieHeight}>
               <PieChart>
-                {/* innerRadius adjusted to 120 and outerRadius to 170 to match the larger canvas size */}
                 <Pie data={pieData} cx="50%" cy="50%" innerRadius={pieInnerRadius} outerRadius={pieOuterRadius}
                   dataKey="value" paddingAngle={3}>
                   {pieData.map((d) => (
@@ -270,14 +266,12 @@ function DashboardView({ expenses, setView, currency }: { expenses: Expense[]; s
 
           <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
             <h2 className="text-sm font-semibold text-gray-700 mb-4">Top Categories</h2>
-            {/* Height optimized to 480 to vertically align with the donut chart component */}
             <ResponsiveContainer width="100%" height={480}>
               <BarChart data={barData} margin={{ top: 10, right: 0, left: -10, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
                 <XAxis dataKey="name" tick={{ fontSize: 10 }} />
                 <YAxis tick={{ fontSize: 10 }} />
                 <Tooltip content={<CustomTooltip />} />
-                {/* barSize assigned to 45 so elements don't look overly skinny on tall viewports */}
                 <Bar dataKey="value" radius={[6, 6, 0, 0]}>
                   {barData.map((d) => (
                     <Cell key={d.name} fill={getCategoryColor(d.name)} />
